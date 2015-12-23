@@ -49,6 +49,7 @@ static constexpr const char base32_crockford_alphabet[] = {
     'P', 'Q', 'R', 'S', 'T',                          // 27 - no U
     'V', 'W', 'X', 'Y', 'Z'                           // 32
 };
+static_assert(sizeof(base32_crockford_alphabet) == 32, "base32 alphabet must have 32 values");
 
 class base32_crockford_base
 {
@@ -77,14 +78,14 @@ public:
                 : (c >= 'm' && c <= 'n') ? (c - 'm' + 20) // no O
                 : (c >= 'p' && c <= 't') ? (c - 'p' + 22) // no U
                 : (c >= 'v' && c <= 'z') ? (c - 'v' + 27)
-                : (c == '-') ? -1 // "Hyphens (-) can be inserted into strings [for readability]."
-                : (c == '\0') ? -2 // stop at end of string
+                : (c == '-') ? 253 // "Hyphens (-) can be inserted into strings [for readability]."
+                : (c == '\0') ? 255 // stop at end of string
                 : throw symbol_error(c);
     }
 
     static inline constexpr bool should_ignore(uint8_t index) { return index == -1; }
     static inline constexpr bool is_special_character(uint8_t index) { return index > 32; }
-    static inline constexpr bool is_eof(uint8_t index) { return index == -2; }
+    static inline constexpr bool is_eof(uint8_t index) { return index == 255; }
 };
 
 // base32_crockstr is a concatenative iterative (i.e. streaming) interpretation of Crockford base32.
@@ -99,7 +100,12 @@ public:
 };
 
 // RFC 4648 uses a simple alphabet: A-Z starting at index 0, then 2-7 starting at index 26.
-static constexpr const char base32_rfc4648_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+static constexpr const char base32_rfc4648_alphabet[] = {
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', // at index 26
+    '2', '3', '4', '5', '6', '7'
+};
+static_assert(sizeof(base32_rfc4648_alphabet) == 32, "base32 alphabet must have 32 values");
 
 class base32_rfc4648
 {
@@ -119,16 +125,16 @@ public:
     {
         return (c >= 'A' && c <= 'Z') ? (c - 'A')
                 : (c >= '2' && c <= '7') ? (c - '2' + 26)
-                : (c == padding_symbol()) ? -3
-                : (c == '\0') ? -2 // stop at end of string
+                : (c == padding_symbol()) ? 254
+                : (c == '\0') ? 255 // stop at end of string
                 : throw symbol_error(c);
     }
 
     // RFC4648 does not specify any whitespace being allowed in base32 encodings.
-    static inline constexpr bool should_ignore(char /*index*/) { return false; }
+    static inline constexpr bool should_ignore(uint8_t /*index*/) { return false; }
     static inline constexpr bool is_special_character(uint8_t index) { return index > 32; }
-    static inline constexpr bool is_eof(uint8_t index) { return index == -2; }
-    static inline constexpr bool is_padding_symbol(uint8_t index) { return index == -3; }
+    static inline constexpr bool is_padding_symbol(uint8_t index) { return index == 254; }
+    static inline constexpr bool is_eof(uint8_t index) { return index == 255; }
 };
 
 template <typename CodecVariant>
