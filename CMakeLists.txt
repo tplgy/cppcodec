@@ -12,7 +12,8 @@ set(PUBLIC_HEADERS
     cppcodec/data/access.hpp
     cppcodec/data/raw_result_buffer.hpp
     cppcodec/detail/base32.hpp
-    cppcodec/detail/codec.hpp)
+    cppcodec/detail/codec.hpp
+    cppcodec/detail/stream_codec.hpp)
 
 add_library(cppcodec OBJECT ${PUBLIC_HEADERS})
 add_subdirectory(tool)

@@ -31,12 +31,12 @@
 #define CPPCODEC_DETAIL_BASE32
 
 #include <sstream>
-#include <string.h>
 #include <stdint.h>
 #include <type_traits>
 
+#include "../data/access.hpp"
 #include "../parse_error.hpp"
-#include "codec.hpp"
+#include "stream_codec.hpp"
 
 namespace cppcodec {
 namespace detail {
@@ -94,6 +94,8 @@ public:
 // See http://merrigrove.blogspot.ca/2014/04/what-heck-is-base64-encoding-really.html for more info.)
 class base32_crockstr : public base32_crockford_base
 {
+public:
+    template <typename Codec> using codec_impl = stream_codec<Codec, base32_crockstr>;
 };
 
 // RFC 4648 uses a simple alphabet: A-Z starting at index 0, then 2-7 starting at index 26.
@@ -102,6 +104,8 @@ static constexpr const char base32_rfc4648_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVW
 class base32_rfc4648
 {
 public:
+    template <typename Codec> using codec_impl = stream_codec<Codec, base32_rfc4648>;
+
     static inline constexpr bool generates_padding() { return true; }
     static inline constexpr bool requires_padding() { return true; }
     static inline constexpr char padding_symbol() { return '='; }
@@ -128,22 +132,12 @@ public:
 };
 
 template <typename CodecVariant>
-class base32
+class base32 : public CodecVariant::template codec_impl<base32<CodecVariant>>
 {
 public:
-    template <typename Result, typename ResultState> static void encode(
-            Result& encoded_result, ResultState&, const unsigned char* binary, size_t binary_size);
-
-    template <typename Result, typename ResultState> static void decode(
-            Result& binary_result, ResultState&, const char* encoded, size_t encoded_size);
-
-    static constexpr size_t encoded_size(size_t binary_size) noexcept;
-    static constexpr size_t decoded_max_size(size_t encoded_size) noexcept;
-
     static inline constexpr uint8_t binary_block_size() { return 5; }
     static inline constexpr uint8_t encoded_block_size() { return 8; }
 
-private:
     template <typename Result, typename ResultState> static void encode_block(
             Result& encoded, ResultState&, const unsigned char* src);
 
@@ -241,30 +235,6 @@ inline void base32<CodecVariant>::pad(
 
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
-inline void base32<CodecVariant>::encode(
-        Result& encoded_result, ResultState& state,
-        const unsigned char* src, size_t src_size)
-{
-    const unsigned char* src_end = src + src_size - binary_block_size();
-
-    for (; src <= src_end; src += binary_block_size()) {
-        encode_block(encoded_result, state, src);
-    }
-    src_end += binary_block_size();
-
-    if (src_end > src) {
-        auto remaining_src_len = src_end - src;
-        if (!remaining_src_len || remaining_src_len >= binary_block_size()) {
-            abort();
-            return;
-        }
-        encode_tail(encoded_result, state, src, remaining_src_len);
-        pad(encoded_result, state, remaining_src_len);
-    }
-}
-
-template <typename CodecVariant>
-template <typename Result, typename ResultState>
 inline void base32<CodecVariant>::decode_block(
         Result& decoded, ResultState& state, const unsigned char* idx)
 {
@@ -313,86 +283,6 @@ inline void base32<CodecVariant>::decode_tail(
     // idx_len == 7
     put(decoded, state, (uint8_t)(((idx[4] << 7) & 0x80) | ((idx[5] << 2) & 0x7C) | ((idx[6] >> 3) & 0x3))); // size 4
     put(decoded, state, (uint8_t)((idx[6] << 5) & 0xE0)); // size 5
-}
-
-template <typename CodecVariant>
-template <typename Result, typename ResultState>
-inline void base32<CodecVariant>::decode(
-        Result& binary_result, ResultState& state,
-        const char* src_encoded, size_t src_size)
-{
-    const char* src = src_encoded;
-    const char* src_end = src + src_size;
-
-    using V = CodecVariant;
-
-    uint8_t idx[8] = {};
-    uint8_t last_value_idx = 0;
-
-    while (src < src_end) {
-        if (CodecVariant::should_ignore(idx[last_value_idx] = CodecVariant::index_of(*(src++)))) {
-            continue;
-        }
-        if (CodecVariant::is_special_character(idx[last_value_idx])) {
-            break;
-        }
-
-        ++last_value_idx;
-        if (last_value_idx == encoded_block_size()) {
-            decode_block(binary_result, state, idx);
-            last_value_idx = 0;
-        }
-    }
-
-    uint8_t last_idx = last_value_idx;
-    if (CodecVariant::is_padding_symbol(idx[last_value_idx])) {
-        // We're in here because we just read a (first) padding character. Try to read more.
-        ++last_idx;
-        while (src < src_end) {
-            if (CodecVariant::is_eof(idx[last_idx] = CodecVariant::index_of(*(src++)))) {
-                break;
-            }
-            if (!CodecVariant::is_padding_symbol(idx[last_idx])) {
-                throw padding_error();
-            }
-
-            ++last_idx;
-            if (last_idx > encoded_block_size()) {
-                throw padding_error();
-            }
-        }
-    }
-
-    if (last_value_idx)  {
-        if (CodecVariant::requires_padding() && last_idx != encoded_block_size()) {
-            // If the input is not a multiple of the block size then the input is incorrect.
-            throw padding_error();
-        }
-        if (last_value_idx >= encoded_block_size()) {
-            abort();
-            return;
-        }
-        decode_tail(binary_result, state, idx, last_value_idx);
-    }
-}
-
-template <typename CodecVariant>
-inline constexpr size_t base32<CodecVariant>::encoded_size(size_t binary_size) noexcept
-{
-    return CodecVariant::generates_padding()
-            // With padding, the encoded size is a multiple of 8 bytes.
-            // To calculate that, round the binary size up to multiple of 5, then convert.
-            ? (binary_size + 4 - ((binary_size + 4) % 5)) * 8 / 5
-            // No padding: only pad to the next multiple of 5 bits, i.e. at most a single extra byte.
-            : (binary_size * 8 / 5) + (((binary_size * 8) % 5) ? 1 : 0);
-}
-
-template <typename CodecVariant>
-inline constexpr size_t base32<CodecVariant>::decoded_max_size(size_t encoded_size) noexcept
-{
-    return CodecVariant::requires_padding()
-            ? encoded_size * 5 / 8
-            : (encoded_size * 5 / 8) + (((encoded_size * 5) % 8) ? 1 : 0);
 }
 
 } // namespace detail
