@@ -21,14 +21,14 @@
  *  IN THE SOFTWARE.
  */
 
-#ifndef CPPCODEC_BASE32_CROCKSTR
-#define CPPCODEC_BASE32_CROCKSTR
+#ifndef CPPCODEC_BASE32_RFC4648
+#define CPPCODEC_BASE32_RFC4648
 
 #include "detail/codec.hpp"
 #include "detail/base32.hpp"
 
 namespace cppcodec {
-using base32_crockstr = detail::codec<detail::base32<detail::base32_crockstr>>;
+using base32_rfc4648 = detail::codec<detail::base32<detail::base32_rfc4648>>;
 }
 
-#endif // CPPCODEC_BASE32_CROCKSTR
+#endif // CPPCODEC_BASE32_RFC4648

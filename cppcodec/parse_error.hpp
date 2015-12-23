@@ -25,12 +25,44 @@
 #define CPPCODEC_PARSE_ERROR
 
 #include <stdexcept>
+#include <sstream>
 
 namespace cppcodec {
 
-class parse_error : public std::invalid_argument
+class parse_error : public std::domain_error
 {
-    using std::invalid_argument::invalid_argument;
+public:
+    using std::domain_error::domain_error;
+};
+
+// Avoids memory allocation, so it can be used in constexpr functions.
+class symbol_error : public parse_error
+{
+public:
+    symbol_error(char c)
+        : parse_error(static_cast<std::ostringstream&>(std::ostringstream() << "parse error: "
+                "character [" << static_cast<int>(c) << " '" << c << "'] out of bounds").str())
+        , m_symbol(c)
+    {
+    }
+
+    symbol_error(const symbol_error&) = default;
+
+    char symbol() const noexcept { return m_symbol; }
+
+private:
+    char m_symbol;
+};
+
+class padding_error : public parse_error
+{
+public:
+    padding_error()
+        : parse_error("parse error: codec expects padded input string but padding was invalid")
+    {
+    }
+
+    padding_error(const padding_error&) = default;
 };
 
 } // namespace cppcodec

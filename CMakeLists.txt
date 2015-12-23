@@ -5,6 +5,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(PUBLIC_HEADERS
     cppcodec/base32_crockstr.hpp
+    cppcodec/base32_default_crockstr.hpp
+    cppcodec/base32_default_rfc4648.hpp
+    cppcodec/base32_rfc4648.hpp
     cppcodec/parse_error.hpp
     cppcodec/data/access.hpp
     cppcodec/data/raw_result_buffer.hpp

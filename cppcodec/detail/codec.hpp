@@ -85,7 +85,7 @@ public:
             const T& binary) noexcept;
 
     // Calculate the exact length of the encoded string based on binary size.
-    static size_t encoded_size(size_t binary_size) noexcept;
+    static constexpr size_t encoded_size(size_t binary_size) noexcept;
 
     //
     // Decoding
@@ -117,7 +117,7 @@ public:
             char* binary_result, size_t binary_buffer_size, const T& encoded);
 
     // Calculate the maximum size of the decoded binary buffer based on the encoded string length.
-    static size_t decoded_max_size(size_t encoded_size) noexcept;
+    static constexpr size_t decoded_max_size(size_t encoded_size) noexcept;
 };
 
 
@@ -229,7 +229,7 @@ inline size_t codec<CodecImpl>::encode(
 }
 
 template <typename CodecImpl>
-inline size_t codec<CodecImpl>::encoded_size(size_t binary_size) noexcept
+inline constexpr size_t codec<CodecImpl>::encoded_size(size_t binary_size) noexcept
 {
     return CodecImpl::encoded_size(binary_size);
 }
@@ -321,7 +321,7 @@ inline size_t codec<CodecImpl>::decode(char* binary_result, size_t binary_buffer
 }
 
 template <typename CodecImpl>
-inline size_t codec<CodecImpl>::decoded_max_size(size_t encoded_size) noexcept
+inline constexpr size_t codec<CodecImpl>::decoded_max_size(size_t encoded_size) noexcept
 {
     return CodecImpl::decoded_max_size(encoded_size);
 }

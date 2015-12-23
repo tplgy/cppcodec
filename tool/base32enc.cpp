@@ -22,14 +22,20 @@
  */
 
 #include <cppcodec/base32_crockstr.hpp>
+#include <cppcodec/base32_rfc4648.hpp>
 
 #include <iostream>
+#include <string>
 
 int main(int argc, char *argv[])
 {
     for (int i = 1; i < argc; ++i) {
         size_t arglen = strlen(argv[i]);
+
         std::string encoded = cppcodec::base32_crockstr::encode(argv[i], arglen);
+        std::cout << encoded << std::endl;
+
+        encoded = cppcodec::base32_rfc4648::encode(argv[i], arglen);
         std::cout << encoded << std::endl;
     }
     return 0;

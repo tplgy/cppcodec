@@ -152,7 +152,7 @@ Returns the byte size of the decoded binary data, which is less or equal to
 `<codec>::decoded_max_size(encoded_size)`.
 
 Calls abort() if `binary_buffer_size` is insufficient (for consistency with encode()).
-Throws a cppcodec::parse_error exception (inheriting from std::invalid_argument)
+Throws a cppcodec::parse_error exception (inheriting from std::domain_error)
 if the input data does not conform to the codec variant specification.
 
 ```C++
