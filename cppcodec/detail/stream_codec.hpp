@@ -79,8 +79,6 @@ inline void stream_codec<Codec, CodecVariant>::decode(
     const char* src = src_encoded;
     const char* src_end = src + src_size;
 
-    using V = CodecVariant;
-
     uint8_t idx[Codec::encoded_block_size()] = {};
     uint8_t last_value_idx = 0;
 
@@ -100,7 +98,7 @@ inline void stream_codec<Codec, CodecVariant>::decode(
     }
 
     uint8_t last_idx = last_value_idx;
-    if (CodecVariant::is_padding_symbol(idx[last_value_idx])) {
+    if (CodecVariant::is_padding_symbol(idx[last_idx])) {
         // We're in here because we just read a (first) padding character. Try to read more.
         ++last_idx;
         while (src < src_end) {
@@ -118,7 +116,7 @@ inline void stream_codec<Codec, CodecVariant>::decode(
         }
     }
 
-    if (last_value_idx)  {
+    if (last_idx)  {
         if (CodecVariant::requires_padding() && last_idx != Codec::encoded_block_size()) {
             // If the input is not a multiple of the block size then the input is incorrect.
             throw padding_error();
