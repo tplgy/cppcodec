@@ -277,7 +277,7 @@ inline void codec<CodecImpl>::decode(Result& binary_result, const char* encoded,
 
     CodecImpl::decode(binary_result, state, encoded, encoded_size);
     data::finish(binary_result, state);
-    assert(data::size(binary_result) == binary_buffer_size);
+    assert(data::size(binary_result) <= binary_buffer_size);
 }
 
 
