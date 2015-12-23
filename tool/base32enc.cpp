@@ -33,11 +33,8 @@ int main(int argc, char *argv[])
     for (int i = 1; i < argc; ++i) {
         size_t arglen = strlen(argv[i]);
 
-        std::string encoded = cppcodec::base32_crockstr::encode(argv[i], arglen);
-        std::cout << encoded << std::endl;
-
-        encoded = cppcodec::base32_rfc4648::encode(argv[i], arglen);
-        std::cout << encoded << std::endl;
+        std::cout << cppcodec::base32_crockstr::encode(argv[i], arglen) << std::endl;
+        std::cout << cppcodec::base32_rfc4648::encode(argv[i], arglen) << std::endl;
     }
     return 0;
 }
