@@ -8,10 +8,15 @@ set(PUBLIC_HEADERS
     cppcodec/base32_default_crockstr.hpp
     cppcodec/base32_default_rfc4648.hpp
     cppcodec/base32_rfc4648.hpp
+    cppcodec/base64_default_rfc4648.hpp
+    cppcodec/base64_default_url.hpp
+    cppcodec/base64_rfc4648.hpp
+    cppcodec/base64_url.hpp
     cppcodec/parse_error.hpp
     cppcodec/data/access.hpp
     cppcodec/data/raw_result_buffer.hpp
     cppcodec/detail/base32.hpp
+    cppcodec/detail/base64.hpp
     cppcodec/detail/codec.hpp
     cppcodec/detail/stream_codec.hpp)
 
