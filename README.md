@@ -105,11 +105,13 @@ size_t <codec>::encode(char* encoded_result, size_t encoded_buffer_size, const T
 Encode binary data into pre-allocated memory with a buffer size of
 `<codec>::encoded_size(binary_size)` or larger.
 
-Returns the byte size of the encoded string, which is equal to `<codec>::encoded_size(binary_size)`.
+Returns the byte size of the encoded string excluding null termination,
+which is equal to `<codec>::encoded_size(binary_size)`.
 
 If `encoded_buffer_size` is larger than required, a single null termination character (`'\0'`)
 is written after the last encoded character. The `encoded_size()` function ensures that the required
 buffer size is large enough to hold the padding required for the respective codec variant.
+Provide a buffer of size `encoded_size() + 1` to make it a null-terminated C string.
 
 Calls abort() if `encoded_buffer_size` is insufficient. (That way, the function can remain `noexcept`
 rather than throwing on an entirely avoidable error condition.)

@@ -206,7 +206,13 @@ inline size_t codec<CodecImpl>::encode(
         const unsigned char* binary, size_t binary_size) noexcept
 {
     // This overload is where we wrap the result pointer & size.
-    encode(data::raw_result_buffer(encoded_result, encoded_buffer_size), binary, binary_size);
+    data::raw_result_buffer encoded(encoded_result, encoded_buffer_size);
+    encode(encoded, binary, binary_size);
+
+    if (data::size(encoded) < encoded_buffer_size) {
+        encoded_result[data::size(encoded)] = '\0';
+    }
+    return data::size(encoded);
 }
 
 template <typename CodecImpl>
@@ -215,7 +221,7 @@ inline size_t codec<CodecImpl>::encode(
         const char* binary, size_t binary_size) noexcept
 {
     // This overload is where we wrap the result pointer & size.
-    encode(encoded_result, encoded_buffer_size,
+    return encode(encoded_result, encoded_buffer_size,
             reinterpret_cast<const unsigned char*>(binary), binary_size);
 }
 
@@ -225,7 +231,7 @@ inline size_t codec<CodecImpl>::encode(
         char* encoded_result, size_t encoded_buffer_size,
         const T& binary) noexcept
 {
-    encode(encoded_result, encoded_buffer_size, data::uchar_data(binary), data::size(binary));
+    return encode(encoded_result, encoded_buffer_size, data::uchar_data(binary), data::size(binary));
 }
 
 template <typename CodecImpl>
@@ -294,7 +300,9 @@ inline size_t codec<CodecImpl>::decode(
         const char* encoded, size_t encoded_size)
 {
     // This overload is where we wrap the result pointer & size.
-    decode(data::raw_result_buffer(binary_result, binary_buffer_size), encoded, encoded_size);
+    data::raw_result_buffer binary(binary_result, binary_buffer_size);
+    decode(binary, encoded, encoded_size);
+    return data::size(binary);
 }
 
 template <typename CodecImpl>
@@ -302,7 +310,7 @@ inline size_t codec<CodecImpl>::decode(
         char* binary_result, size_t binary_buffer_size,
         const char* encoded, size_t encoded_size)
 {
-    decode(reinterpret_cast<unsigned char*>(binary_result), binary_buffer_size, encoded, encoded_size);
+    return decode(reinterpret_cast<unsigned char*>(binary_result), binary_buffer_size, encoded, encoded_size);
 }
 
 template <typename CodecImpl>
@@ -310,14 +318,14 @@ template <typename T>
 inline size_t codec<CodecImpl>::decode(
         unsigned char* binary_result, size_t binary_buffer_size, const T& encoded)
 {
-    decode(binary_result, binary_buffer_size, data::char_data(encoded), data::size(encoded));
+    return decode(binary_result, binary_buffer_size, data::char_data(encoded), data::size(encoded));
 }
 
 template <typename CodecImpl>
 template <typename T>
 inline size_t codec<CodecImpl>::decode(char* binary_result, size_t binary_buffer_size, const T& encoded)
 {
-    decode(reinterpret_cast<unsigned char*>(binary_result), binary_buffer_size, encoded);
+    return decode(reinterpret_cast<unsigned char*>(binary_result), binary_buffer_size, encoded);
 }
 
 template <typename CodecImpl>
