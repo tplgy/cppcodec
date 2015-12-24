@@ -35,10 +35,11 @@ Here is an expected standard use of cppcodec:
 #include <cppcodec/base64_default_rfc4648.hpp>
 #include <iostream>
 
-void main() {
+int main() {
    std::vector<uint8_t> decoded = base64::decode("YW55IGNhcm5hbCBwbGVhc3VyZQ==");
-   std::cout << decoded << std::endl; // "any carnal pleasure"
+   std::cout << "decoded size (\"any carnal pleasure\"): " << decoded.size() << '\n';
    std::cout << base32::encode(decoded) << std::endl; // "C5Q7J833C5S6WRBC41R6RSB1EDTQ4S8"
+   return 0;
 }
 ```
 

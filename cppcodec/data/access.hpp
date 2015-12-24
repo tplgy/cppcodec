@@ -24,8 +24,6 @@
 #ifndef CPPCODEC_DETAIL_DATA_ACCESS
 #define CPPCODEC_DETAIL_DATA_ACCESS
 
-#include "../detail/function_traits.hpp"
-
 #include <stdint.h> // for size_t
 #include <stdlib.h> // for abort()
 #include <type_traits> // for std::remove_{cv,pointer,reference}
@@ -42,6 +40,9 @@ namespace data {
 // For both const and result types: size(const T&)
 
 template <typename T> inline size_t size(const T& t) { return t.size(); }
+template <typename T, size_t N> inline constexpr size_t size(const T (&t)[N]) noexcept {
+    return N * sizeof(t[0]);
+}
 
 class general_t {};
 class specific_t : public general_t {};
@@ -66,19 +67,39 @@ inline void init(Result& result, empty_result_state&, size_t capacity)
     result.reserve(capacity);
 }
 
-// SFINAE: Push back either a char or a uint8_t, whichever works.
-// (Hopefully both don't work at the same type. If they do, specialize the result state.)
 template <typename Result>
-inline void put(Result& result, empty_result_state& state, char c)
+inline void finish(Result&, empty_result_state&)
 {
-    using func = decltype(&Result::push_back);
-    using char_type = typename detail::function_traits<func>::arg2_type; // arg1 is the object itself
-    result.push_back(static_cast<char_type>(c));
+    // Default is to push_back(), which already increases the size.
 }
 
-template <typename Result>
-inline void finish(Result& result, empty_result_state&)
+// For the put() default implementation, we try calling push_back() with either uint8_t or char,
+// whichever compiles. Scary-fancy template magic from http://stackoverflow.com/a/1386390.
+namespace fallback {
+    struct flag { char c[2]; }; // sizeof > 1
+    flag put_uint8(...);
+
+    int operator,(flag, flag);
+    template <typename T> void operator,(flag, T&); // map everything else to void
+    char operator,(int, flag); // sizeof 1
+}
+
+template <typename Result> inline void put_uint8(Result& result, uint8_t c) { result.push_back(c); }
+
+template <bool> struct put_impl;
+template <> struct put_impl<true> { // put_uint8() available
+    template<typename Result> static void put(Result& result, uint8_t c) { put_uint8(result, c); }
+};
+template <> struct put_impl<false> { // put_uint8() not available
+    template<typename Result> static void put(Result& result, uint8_t c) {
+        result.push_back(static_cast<char>(c));
+    }
+};
+
+template <typename Result> inline void put(Result& result, empty_result_state&, uint8_t c)
 {
+    using namespace fallback;
+    put_impl<sizeof(fallback::flag(), put_uint8(result, c), fallback::flag()) != 1>::put(result, c);
 }
 
 //
@@ -144,6 +165,10 @@ inline void put(Result& result, direct_data_access_result_state<Result>& state, 
 template <typename T> inline const char* char_data(const T& t)
 {
     return reinterpret_cast<const char*>(t.data());
+}
+template <typename T, size_t N> inline const char* char_data(const T (&t)[N]) noexcept
+{
+    return reinterpret_cast<const char*>(&(t[0]));
 }
 
 template <typename T> inline const uint8_t* uchar_data(const T& t)
