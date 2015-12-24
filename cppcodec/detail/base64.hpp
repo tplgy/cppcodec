@@ -144,10 +144,6 @@ public:
             Result& decoded, ResultState&, const unsigned char* idx, size_t idx_len);
 };
 
-//
-//     11111111 10101010 10110011  10111100 10010100
-// => 11111 11110 10101 01011 00111 01111 00100 10100
-//
 
 template <typename CodecVariant>
 template <typename Result, typename ResultState>

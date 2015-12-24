@@ -46,20 +46,56 @@ If possible, avoid including "default" headers in other header files.
 Non-aliasing headers omit the "default" part, e.g. `<cppcodec/base64_utf7.hpp>`
 or `<cppcodec/hex_lowercase.hpp>`. Currently supported variants are:
 
-* `base64_utf7` uses the PEM/MIME/UTF-7 alphabet, that is (in order) A-Z, a-z, 0-9 plus
-  characters '+' and '/'. This is what's usually considered "standard base64",
-  but without the padding ('=') and line breaks of PEM and MIME variants.
-* `base32_crockstr` uses the [Crockford variant](http://www.crockford.com/wrmg/base32.html).
-  It's less widely used than the RFC 4648 alphabet, but is the most sensible of
-  of base32 alphabets and also accepts lower-case letters when decoding.
-  Crockford base32 uses no '=' padding. Checksums are not implemented. Note that
-  the specification is ambiguous about whether to pad bit quintets to the left or
-  to the right, i.e. whether the codec is a place-based single number encoding
-  system or a concatenative iterative stream encoder. This codec variant picks
-  the streaming interpretation and thus zero-pads on the right. (See
+### base64
+
+* `base64_rfc4648` uses the PEM/MIME/UTF-7 alphabet, that is (in order)
+  A-Z, a-z, 0-9 plus characters '+' and '/'. This is what's usually considered
+  the "standard base64" that you see everywhere and requires padding ('=') but
+  no line breaks. Whitespace and other out-of-alphabet symbols are regarded as
+  a parse error.
+* `base64_url` is the same as `base64_rfc4648` (and defined in the same RFC)
+  but uses '-' (minus) and '_' (underscore) as special characters instead of
+  '+' and '/'. This is safe to use for URLs and file names. Padding with '=' is
+  still required, look for a future `base64_url_unpadded` variant if you want
+  to do without.
+
+### base32
+
+All base32 variants encode 5 bits as one (8-bit) character, which results in
+an encoded length of roughly 160% (= 8/5). Their selling point is mainly
+case-insensitive decoding, no special characters and alphabets that can be
+communicated via phone.
+
+* `base32_rfc4648` implements the popular, standardized variant defined in
+  RFC 4648. It uses the full upper-case alphabet A-Z for the first 26 values
+  and the digit characters 2-7 for the last ten. Padding with '=' is required
+  and makes the encoded string a multiple of 8 characters. The codec accepts
+  no invalid symbols, so if you want to let the user enter base32 data then
+  consider replacing numbers '0', '1' and '8' with 'O', 'I' and 'B' on input.
+* `base32_crockstr` implements [Crockford base32](http://www.crockford.com/wrmg/base32.html).
+  It's less widely used than the RFC 4648 alphabet, but offers a more carefully
+  picked alphabet and also defines decoding similar characters 'I', 'i', 'L'
+  'l' as '1' plus 'O' and 'o' as '0' so no care is required for user input.
+  Crockford base32 does not use '=' padding. Checksums are not implemented.
+  Note that the specification is ambiguous about whether to pad bit quintets to
+  the left or to the right, i.e. whether the codec is a place-based single number
+  encoding system or a concatenative iterative stream encoder. This codec variant
+  picks the streaming interpretation and thus zero-pads on the right. (See
   http://merrigrove.blogspot.ca/2014/04/what-heck-is-base64-encoding-really.html
   for a detailed discussion of the issue.)
-* `hex_lowercase` outputs lower-case letters and accepts upper-case as well.
+
+### hex
+
+* `hex_upper` outputs upper-case letters and accepts lower-case as well.
+  This is an octet-streaming codec variant and for decoding, requires an even
+  number of input symbols. In other words, don't try to decode (0x)"F",
+  (0x)"10F" etc. with this variant, use a place-based single number codec
+  instead if you want to do this. Also, you are expected to prepend and remove
+  a "0x" prefix externally as it won't be generated when encoding / will be
+  rejected when decoding.
+* `hex_lower` outputs lower-case letters and accepts upper-case as well.
+  Similar to `hex_upper`, it's stream-based (no odd symbol lengths) and does
+  not deal with "0x" prefixes.
 
 
 

@@ -21,7 +21,7 @@
  *  IN THE SOFTWARE.
  */
 
-#include <cppcodec/base32_crockstr.hpp>
+#include <cppcodec/base32_crockford.hpp>
 #include <cppcodec/base32_rfc4648.hpp>
 
 #include <iostream>
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     for (int i = 1; i < argc; ++i) {
         size_t arglen = strlen(argv[i]);
 
-        std::cout << cppcodec::base32_crockstr::encode(argv[i], arglen) << std::endl;
+        std::cout << cppcodec::base32_crockford::encode(argv[i], arglen) << std::endl;
         std::cout << cppcodec::base32_rfc4648::encode(argv[i], arglen) << std::endl;
     }
     return 0;

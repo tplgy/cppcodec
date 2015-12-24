@@ -80,6 +80,9 @@ public:
                 : (c >= 'v' && c <= 'z') ? (c - 'v' + 27)
                 : (c == '-') ? 253 // "Hyphens (-) can be inserted into strings [for readability]."
                 : (c == '\0') ? 255 // stop at end of string
+                // special cases
+                : (c == 'O' || c == 'o') ? 0
+                : (c == 'I' || c == 'i' || c == 'L' || c == 'l') ? 1
                 : throw symbol_error(c);
     }
 
@@ -93,10 +96,10 @@ public:
 // to mean zero-extending it on the right.
 // (The other possible interpretation is base32_crocknum, a place-based single number encoding system.
 // See http://merrigrove.blogspot.ca/2014/04/what-heck-is-base64-encoding-really.html for more info.)
-class base32_crockstr : public base32_crockford_base
+class base32_crockford : public base32_crockford_base
 {
 public:
-    template <typename Codec> using codec_impl = stream_codec<Codec, base32_crockstr>;
+    template <typename Codec> using codec_impl = stream_codec<Codec, base32_crockford>;
 };
 
 // RFC 4648 uses a simple alphabet: A-Z starting at index 0, then 2-7 starting at index 26.
@@ -127,6 +130,7 @@ public:
                 : (c >= '2' && c <= '7') ? (c - '2' + 26)
                 : (c == padding_symbol()) ? 254
                 : (c == '\0') ? 255 // stop at end of string
+                : (c >= 'a' && c <= 'z') ? (c - 'a') // lower-case: not expected, but accepted
                 : throw symbol_error(c);
     }
 
