@@ -37,7 +37,7 @@ namespace detail {
 
 // SFINAE: Templates sometimes beat sensible overloads - make sure we don't call the wrong one.
 template <typename T>
-struct non_char_array : std::enable_if<
+struct non_char_ptr : std::enable_if<
         !std::is_same<T, char*>::value && !std::is_same<T, uint8_t*>::value, T>::type
 {
     using type = T;
@@ -70,7 +70,7 @@ public:
     template<typename Result>
     static void encode(Result& encoded_result, const char* binary, size_t binary_size);
     template<typename Result, typename T>
-    static void encode(typename non_char_array<Result>::type& encoded_result, const T& binary);
+    static void encode(typename non_char_ptr<Result>::type& encoded_result, const T& binary);
 
     // Raw pointer output, assumes pre-allocated memory with size > encoded_size(binary_size).
     static size_t encode(
@@ -102,7 +102,7 @@ public:
     template<typename Result>
     static void decode(Result& binary_result, const char* encoded, size_t encoded_size);
     template<typename Result, typename T>
-    static void decode(typename non_char_array<Result>::type& binary_result, const T& encoded);
+    static void decode(typename non_char_ptr<Result>::type& binary_result, const T& encoded);
 
     // Raw pointer output, assumes pre-allocated memory with size > decoded_max_size(encoded_size).
     static size_t decode(
@@ -195,7 +195,7 @@ inline void codec<CodecImpl>::encode(
 
 template <typename CodecImpl>
 template <typename Result, typename T>
-inline void codec<CodecImpl>::encode(typename non_char_array<Result>::type& encoded_result, const T& binary)
+inline void codec<CodecImpl>::encode(typename non_char_ptr<Result>::type& encoded_result, const T& binary)
 {
     encode(encoded_result, data::uchar_data(binary), data::size(binary));
 }
@@ -289,7 +289,7 @@ inline void codec<CodecImpl>::decode(Result& binary_result, const char* encoded,
 
 template <typename CodecImpl>
 template <typename Result, typename T>
-inline void codec<CodecImpl>::decode(typename non_char_array<Result>::type& binary_result, const T& encoded)
+inline void codec<CodecImpl>::decode(typename non_char_ptr<Result>::type& binary_result, const T& encoded)
 {
     decode(binary_result, data::char_data(encoded), data::size(encoded));
 }
