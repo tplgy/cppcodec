@@ -24,9 +24,7 @@
 #ifndef CPPCODEC_DETAIL_HEX
 #define CPPCODEC_DETAIL_HEX
 
-#include <sstream>
 #include <stdint.h>
-#include <type_traits>
 
 #include "../data/access.hpp"
 #include "../parse_error.hpp"

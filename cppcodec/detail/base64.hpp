@@ -28,7 +28,6 @@
 #ifndef CPPCODEC_DETAIL_BASE64
 #define CPPCODEC_DETAIL_BASE64
 
-#include <sstream>
 #include <stdint.h>
 #include <type_traits>
 

@@ -30,7 +30,6 @@
 #ifndef CPPCODEC_DETAIL_BASE32
 #define CPPCODEC_DETAIL_BASE32
 
-#include <sstream>
 #include <stdint.h>
 #include <type_traits>
 
