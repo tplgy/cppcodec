@@ -25,26 +25,27 @@ to let you make a conscious choice about which one you're using, but assumes you
 mostly stick to a single one.
 
 cppcodec's approach is to implement encoding/decoding algorithms in different namespaces
-(e.g. `cppcodec::base64_utf7`) and in addition to the natural headers, also offer
+(e.g. `cppcodec::base64_rfc4648`) and in addition to the natural headers, also offer
 convenience headers to define a shorthand alias (e.g. `base64`) for one of the variants.
 
 Here is an expected standard use of cppcodec:
 
 ```C++
-#include <cppcodec/base64_default_utf7.hpp>
-#include <cppcodec/base32_default_crockstr.hpp>
+#include <cppcodec/base32_default_crockford.hpp>
+#include <cppcodec/base64_default_rfc4648.hpp>
 #include <iostream>
 
 void main() {
-   std::vector<char> decoded = base64::decode("YW55IGNhcm5hbCBwbGVhc3VyZS4");
-   std::cout << base32::encode(decoded); // "any carnal pleasure."
+   std::vector<uint8_t> decoded = base64::decode("YW55IGNhcm5hbCBwbGVhc3VyZQ==");
+   std::cout << decoded << std::endl; // "any carnal pleasure"
+   std::cout << base32::encode(decoded) << std::endl; // "C5Q7J833C5S6WRBC41R6RSB1EDTQ4S8"
 }
 ```
 
 If possible, avoid including "default" headers in other header files.
 
-Non-aliasing headers omit the "default" part, e.g. `<cppcodec/base64_utf7.hpp>`
-or `<cppcodec/hex_lowercase.hpp>`. Currently supported variants are:
+Non-aliasing headers omit the "default" part, e.g. `<cppcodec/base64_rfc4648.hpp>`
+or `<cppcodec/hex_lower.hpp>`. Currently supported variants are:
 
 ### base64
 
@@ -72,7 +73,7 @@ communicated via phone.
   and makes the encoded string a multiple of 8 characters. The codec accepts
   no invalid symbols, so if you want to let the user enter base32 data then
   consider replacing numbers '0', '1' and '8' with 'O', 'I' and 'B' on input.
-* `base32_crockstr` implements [Crockford base32](http://www.crockford.com/wrmg/base32.html).
+* `base32_crockford` implements [Crockford base32](http://www.crockford.com/wrmg/base32.html).
   It's less widely used than the RFC 4648 alphabet, but offers a more carefully
   picked alphabet and also defines decoding similar characters 'I', 'i', 'L'
   'l' as '1' plus 'O' and 'o' as '0' so no care is required for user input.
@@ -103,13 +104,13 @@ communicated via phone.
 
 All codecs expose the same API. In the below documentation, replace `<codec>` with a
 default alias such as `base64`, `base32` or `hex`, or with the full namespace such as
-`cppcodec::base64_utf7` or `cppcodec::base32_crockstr`.
+`cppcodec::base64_rfc4648` or `cppcodec::base32_crockford`.
 
 For templated parameters `T` and `Result`, you can use e.g. `std::vector<char>`,
 `std::string` or anything that supports:
 * `.data()` and `.size()` for `T` (read-only) template parameters,
 * for `Result` template parameters, also `.reserve(size_t)`, `.resize(size_t)`
-  and `.push_back([unsigned] char)`.
+  and `.push_back([uint8_t|char])`.
 
 It's possible to support types lacking these functions, consult the code directly if you need this.
 
@@ -118,15 +119,15 @@ It's possible to support types lacking these functions, consult the code directl
 
 ```C++
 // Convenient version, returns an std::string.
-std::string <codec>::encode(const [unsigned] char* binary, size_t binary_size);
+std::string <codec>::encode(const [uint8_t|char]* binary, size_t binary_size);
 std::string <codec>::encode(const T& binary);
 
 // Convenient version with templated result type.
-Result <codec>::encode<Result>(const [unsigned] char* binary, size_t binary_size);
+Result <codec>::encode<Result>(const [uint8_t|char]* binary, size_t binary_size);
 Result <codec>::encode<Result>(const T& binary);
 
 // Reused result container version. Resizes encoded_result before writing to it.
-void <codec>::encode(Result& encoded_result, const [unsigned] char* binary, size_t binary_size);
+void <codec>::encode(Result& encoded_result, const [uint8_t|char]* binary, size_t binary_size);
 void <codec>::encode(Result& encoded_result, const T& binary);
 ```
 
@@ -134,7 +135,7 @@ Encode binary data into an encoded (base64/base32/hex) string.
 Won't throw by itself, but the string type might throw on `.resize()`.
 
 ```C++
-size_t <codec>::encode(char* encoded_result, size_t encoded_buffer_size, const [unsigned] char* binary, size_t binary_size) noexcept;
+size_t <codec>::encode(char* encoded_result, size_t encoded_buffer_size, const [uint8_t|char]* binary, size_t binary_size) noexcept;
 size_t <codec>::encode(char* encoded_result, size_t encoded_buffer_size, const T& binary) noexcept;
 ```
 
@@ -179,8 +180,8 @@ void <codec>::decode(Result& binary_result, const T& encoded);
 Decode an encoded (base64/base32/hex) string into a binary buffer.
 
 ```C++
-size_t <codec>::decode([unsigned] char* binary_result, size_t binary_buffer_size, const char* encoded, size_t encoded_size);
-size_t <codec>::decode([unsigned] char* binary_result, size_t binary_buffer_size, const T& encoded);
+size_t <codec>::decode([uint8_t|char]* binary_result, size_t binary_buffer_size, const char* encoded, size_t encoded_size);
+size_t <codec>::decode([uint8_t|char]* binary_result, size_t binary_buffer_size, const T& encoded);
 ```
 
 Decode an encoded string into pre-allocated memory with a buffer size of

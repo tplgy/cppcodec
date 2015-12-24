@@ -148,10 +148,10 @@ public:
     static inline constexpr uint8_t encoded_block_size() { return 8; }
 
     template <typename Result, typename ResultState> static void encode_block(
-            Result& encoded, ResultState&, const unsigned char* src);
+            Result& encoded, ResultState&, const uint8_t* src);
 
     template <typename Result, typename ResultState> static void encode_tail(
-            Result& encoded, ResultState&, const unsigned char* src, size_t src_len);
+            Result& encoded, ResultState&, const uint8_t* src, size_t src_len);
 
     template <typename Result, typename ResultState, typename V = CodecVariant> static void pad(
             Result& encoded, ResultState&,
@@ -163,10 +163,10 @@ public:
     }
 
     template <typename Result, typename ResultState> static void decode_block(
-            Result& decoded, ResultState&, const unsigned char* idx);
+            Result& decoded, ResultState&, const uint8_t* idx);
 
     template <typename Result, typename ResultState> static void decode_tail(
-            Result& decoded, ResultState&, const unsigned char* idx, size_t idx_len);
+            Result& decoded, ResultState&, const uint8_t* idx, size_t idx_len);
 };
 
 //
@@ -177,7 +177,7 @@ public:
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void base32<CodecVariant>::encode_block(
-    Result& encoded, ResultState& state, const unsigned char* src)
+        Result& encoded, ResultState& state, const uint8_t* src)
 {
     using V = CodecVariant;
     data::put(encoded, state, V::symbol((src[0] >> 3) & 0x1F)); // first 5 bits
@@ -193,7 +193,7 @@ inline void base32<CodecVariant>::encode_block(
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void base32<CodecVariant>::encode_tail(
-        Result& encoded, ResultState& state, const unsigned char* src, size_t remaining_src_len)
+        Result& encoded, ResultState& state, const uint8_t* src, size_t remaining_src_len)
 {
     using V = CodecVariant;
 
@@ -245,7 +245,7 @@ inline void base32<CodecVariant>::pad(
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void base32<CodecVariant>::decode_block(
-        Result& decoded, ResultState& state, const unsigned char* idx)
+        Result& decoded, ResultState& state, const uint8_t* idx)
 {
     put(decoded, state, (uint8_t)(((idx[0] << 3) & 0xF8) | ((idx[1] >> 2) & 0x7)));
     put(decoded, state, (uint8_t)(((idx[1] << 6) & 0xC0) | ((idx[2] << 1) & 0x3E) | ((idx[3] >> 4) & 0x1)));
@@ -257,7 +257,7 @@ inline void base32<CodecVariant>::decode_block(
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void base32<CodecVariant>::decode_tail(
-        Result& decoded, ResultState& state, const unsigned char* idx, size_t idx_len)
+        Result& decoded, ResultState& state, const uint8_t* idx, size_t idx_len)
 {
     if (idx_len == 1) {
         put(decoded, state, (uint8_t)((idx[0] << 3) & 0xF8)); // decoded size 1

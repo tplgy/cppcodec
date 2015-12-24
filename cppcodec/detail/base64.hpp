@@ -122,10 +122,10 @@ public:
     static inline constexpr uint8_t encoded_block_size() { return 4; }
 
     template <typename Result, typename ResultState> static void encode_block(
-            Result& encoded, ResultState&, const unsigned char* src);
+            Result& encoded, ResultState&, const uint8_t* src);
 
     template <typename Result, typename ResultState> static void encode_tail(
-            Result& encoded, ResultState&, const unsigned char* src, size_t src_len);
+            Result& encoded, ResultState&, const uint8_t* src, size_t src_len);
 
     template <typename Result, typename ResultState, typename V = CodecVariant> static void pad(
             Result& encoded, ResultState&,
@@ -137,17 +137,17 @@ public:
     }
 
     template <typename Result, typename ResultState> static void decode_block(
-            Result& decoded, ResultState&, const unsigned char* idx);
+            Result& decoded, ResultState&, const uint8_t* idx);
 
     template <typename Result, typename ResultState> static void decode_tail(
-            Result& decoded, ResultState&, const unsigned char* idx, size_t idx_len);
+            Result& decoded, ResultState&, const uint8_t* idx, size_t idx_len);
 };
 
 
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void base64<CodecVariant>::encode_block(
-    Result& encoded, ResultState& state, const unsigned char* src)
+    Result& encoded, ResultState& state, const uint8_t* src)
 {
     using V = CodecVariant;
     data::put(encoded, state, V::symbol(src[0] >> 2)); // first 6 bits
@@ -159,7 +159,7 @@ inline void base64<CodecVariant>::encode_block(
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void base64<CodecVariant>::encode_tail(
-        Result& encoded, ResultState& state, const unsigned char* src, size_t remaining_src_len)
+        Result& encoded, ResultState& state, const uint8_t* src, size_t remaining_src_len)
 {
     using V = CodecVariant;
 
@@ -193,7 +193,7 @@ inline void base64<CodecVariant>::pad(
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void base64<CodecVariant>::decode_block(
-        Result& decoded, ResultState& state, const unsigned char* idx)
+        Result& decoded, ResultState& state, const uint8_t* idx)
 {
     data::put(decoded, state, (uint8_t)((idx[0] << 2) + ((idx[1] & 0x30) >> 4)));
     data::put(decoded, state, (uint8_t)(((idx[1] & 0xF) << 4) + ((idx[2] & 0x3C) >> 2)));
@@ -203,7 +203,7 @@ inline void base64<CodecVariant>::decode_block(
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void base64<CodecVariant>::decode_tail(
-        Result& decoded, ResultState& state, const unsigned char* idx, size_t idx_len)
+        Result& decoded, ResultState& state, const uint8_t* idx, size_t idx_len)
 {
     if (idx_len == 1) {
         data::put(decoded, state, (uint8_t)(idx[0] << 2)); // decoded size 1

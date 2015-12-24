@@ -37,7 +37,7 @@ class stream_codec
 {
 public:
     template <typename Result, typename ResultState> static void encode(
-            Result& encoded_result, ResultState&, const unsigned char* binary, size_t binary_size);
+            Result& encoded_result, ResultState&, const uint8_t* binary, size_t binary_size);
 
     template <typename Result, typename ResultState> static void decode(
             Result& binary_result, ResultState&, const char* encoded, size_t encoded_size);
@@ -50,9 +50,9 @@ template <typename Codec, typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void stream_codec<Codec, CodecVariant>::encode(
         Result& encoded_result, ResultState& state,
-        const unsigned char* src, size_t src_size)
+        const uint8_t* src, size_t src_size)
 {
-    const unsigned char* src_end = src + src_size - Codec::binary_block_size();
+    const uint8_t* src_end = src + src_size - Codec::binary_block_size();
 
     for (; src <= src_end; src += Codec::binary_block_size()) {
         Codec::encode_block(encoded_result, state, src);

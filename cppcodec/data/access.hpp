@@ -66,7 +66,7 @@ inline void init(Result& result, empty_result_state&, size_t capacity)
     result.reserve(capacity);
 }
 
-// SFINAE: Push back either a char or an unsigned char, whichever works.
+// SFINAE: Push back either a char or a uint8_t, whichever works.
 // (Hopefully both don't work at the same type. If they do, specialize the result state.)
 template <typename Result>
 inline void put(Result& result, empty_result_state& state, char c)
@@ -146,9 +146,9 @@ template <typename T> inline const char* char_data(const T& t)
     return reinterpret_cast<const char*>(t.data());
 }
 
-template <typename T> inline const unsigned char* uchar_data(const T& t)
+template <typename T> inline const uint8_t* uchar_data(const T& t)
 {
-    return reinterpret_cast<const unsigned char*>(char_data(t));
+    return reinterpret_cast<const uint8_t*>(char_data(t));
 }
 
 } // namespace data

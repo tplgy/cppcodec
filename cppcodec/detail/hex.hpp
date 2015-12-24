@@ -100,24 +100,24 @@ public:
     static inline constexpr uint8_t encoded_block_size() { return 2; }
 
     template <typename Result, typename ResultState> static void encode_block(
-            Result& encoded, ResultState&, const unsigned char* src);
+            Result& encoded, ResultState&, const uint8_t* src);
 
     template <typename Result, typename ResultState> static void encode_tail(
-            Result& encoded, ResultState&, const unsigned char* src, size_t src_len);
+            Result& encoded, ResultState&, const uint8_t* src, size_t src_len);
 
     template <typename Result, typename ResultState> static void pad(Result&, ResultState&, size_t) { }
 
     template <typename Result, typename ResultState> static void decode_block(
-            Result& decoded, ResultState&, const unsigned char* idx);
+            Result& decoded, ResultState&, const uint8_t* idx);
 
     template <typename Result, typename ResultState> static void decode_tail(
-            Result& decoded, ResultState&, const unsigned char* idx, size_t idx_len);
+            Result& decoded, ResultState&, const uint8_t* idx, size_t idx_len);
 };
 
 
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
-inline void hex<CodecVariant>::encode_block(Result& encoded, ResultState& state, const unsigned char* src)
+inline void hex<CodecVariant>::encode_block(Result& encoded, ResultState& state, const uint8_t* src)
 {
     using V = CodecVariant;
     data::put(encoded, state, V::symbol(src[0] >> 4)); // first 4 bits
@@ -126,7 +126,7 @@ inline void hex<CodecVariant>::encode_block(Result& encoded, ResultState& state,
 
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
-inline void hex<CodecVariant>::encode_tail(Result&, ResultState&, const unsigned char*, size_t)
+inline void hex<CodecVariant>::encode_tail(Result&, ResultState&, const uint8_t*, size_t)
 {
     // Octet-streaming hex always expands to two symbols per input byte.
     // In order to decode odd-length hex numbers such as 0xF, 0x1a5, etc.,
@@ -137,14 +137,14 @@ inline void hex<CodecVariant>::encode_tail(Result&, ResultState&, const unsigned
 
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
-inline void hex<CodecVariant>::decode_block(Result& decoded, ResultState& state, const unsigned char* idx)
+inline void hex<CodecVariant>::decode_block(Result& decoded, ResultState& state, const uint8_t* idx)
 {
     data::put(decoded, state, (uint8_t)((idx[0] << 4) | idx[1]));
 }
 
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
-inline void hex<CodecVariant>::decode_tail(Result&, ResultState&, const unsigned char*, size_t)
+inline void hex<CodecVariant>::decode_tail(Result&, ResultState&, const uint8_t*, size_t)
 {
     throw parse_error("odd-length hex input is not supported by the streaming octet decoder, "
             "use a place-based number decoder instead");
