@@ -206,17 +206,17 @@ inline void base64<CodecVariant>::decode_tail(
         Result& decoded, ResultState& state, const uint8_t* idx, size_t idx_len)
 {
     if (idx_len == 1) {
-        data::put(decoded, state, (uint8_t)(idx[0] << 2)); // decoded size 1
-        return;
+        throw parse_error("invalid number of symbols in last base64 block: found 1, expected 2 or 3");
     }
-    data::put(decoded, state, (uint8_t)((idx[0] << 2) + ((idx[1] & 0x30) >> 4))); // size 1
 
+    // idx_len == 2: decoded size 1
+    data::put(decoded, state, (uint8_t)((idx[0] << 2) + ((idx[1] & 0x30) >> 4)));
     if (idx_len == 2) {
-        data::put(decoded, state, (uint8_t)((idx[1] & 0xF) << 4)); // size 2
         return;
     }
-    // idx_len == 3
-    data::put(decoded, state, (uint8_t)(((idx[1] & 0xF) << 4) + ((idx[2] & 0x3C) >> 2))); // size 2
+
+    // idx_len == 3: decoded size 2
+    data::put(decoded, state, (uint8_t)(((idx[1] & 0xF) << 4) + ((idx[2] & 0x3C) >> 2)));
 }
 
 } // namespace detail

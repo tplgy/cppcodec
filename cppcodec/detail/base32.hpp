@@ -260,38 +260,32 @@ inline void base32<CodecVariant>::decode_tail(
         Result& decoded, ResultState& state, const uint8_t* idx, size_t idx_len)
 {
     if (idx_len == 1) {
-        put(decoded, state, (uint8_t)((idx[0] << 3) & 0xF8)); // decoded size 1
-        return;
-    }
-    put(decoded, state, (uint8_t)(((idx[0] << 3) & 0xF8) | ((idx[1] >> 2) & 0x7))); // size 1
-
-    if (idx_len == 2) {
-        put(decoded, state, (uint8_t)((idx[1] << 6) & 0xC0)); // size 2
-        return;
+        throw parse_error("invalid number of symbols in last base32 block: found 3, expected 2, 4, 5 or 7");
     }
     if (idx_len == 3) {
-        put(decoded, state, (uint8_t)(((idx[1] << 6) & 0xC0) | ((idx[2] << 1) & 0x3E))); // size 2
-        return;
-    }
-    put(decoded, state, (uint8_t)(((idx[1] << 6) & 0xC0) | ((idx[2] << 1) & 0x3E) | ((idx[3] >> 4) & 0x1))); // size 2
-
-    if (idx_len == 4) {
-        put(decoded, state, (uint8_t)((idx[3] << 4) & 0xF0)); // size 3
-        return;
-    }
-    put(decoded, state, (uint8_t)(((idx[3] << 4) & 0xF0) | ((idx[4] >> 1) & 0xF))); // size 3
-
-    if (idx_len == 5) {
-        put(decoded, state, (uint8_t)((idx[4] << 7) & 0x80)); // size 4
-        return;
+        throw parse_error("invalid number of symbols in last base32 block: found 3, expected 2, 4, 5 or 7");
     }
     if (idx_len == 6) {
-        put(decoded, state, (uint8_t)(((idx[4] << 7) & 0x80) | ((idx[5] << 2) & 0x7C))); // size 4
+        throw parse_error("invalid number of symbols in last base32 block: found 6, expected 2, 4, 5 or 7");
+    }
+
+    // idx_len == 2: decoded size 1
+    put(decoded, state, (uint8_t)(((idx[0] << 3) & 0xF8) | ((idx[1] >> 2) & 0x7)));
+    if (idx_len == 2) {
         return;
     }
-    // idx_len == 7
-    put(decoded, state, (uint8_t)(((idx[4] << 7) & 0x80) | ((idx[5] << 2) & 0x7C) | ((idx[6] >> 3) & 0x3))); // size 4
-    put(decoded, state, (uint8_t)((idx[6] << 5) & 0xE0)); // size 5
+    // idx_len == 4: decoded size 2
+    put(decoded, state, (uint8_t)(((idx[1] << 6) & 0xC0) | ((idx[2] << 1) & 0x3E) | ((idx[3] >> 4) & 0x1)));
+    if (idx_len == 4) {
+        return;
+    }
+    // idx_len == 5: decoded size 3
+    put(decoded, state, (uint8_t)(((idx[3] << 4) & 0xF0) | ((idx[4] >> 1) & 0xF)));
+    if (idx_len == 5) {
+        return;
+    }
+    // idx_len == 7: decoded size 4
+    put(decoded, state, (uint8_t)(((idx[4] << 7) & 0x80) | ((idx[5] << 2) & 0x7C) | ((idx[6] >> 3) & 0x3)));
 }
 
 } // namespace detail
