@@ -37,11 +37,7 @@ namespace detail {
 
 // SFINAE: Templates sometimes beat sensible overloads - make sure we don't call the wrong one.
 template <typename T>
-struct non_char_ptr : std::enable_if<
-        !std::is_same<T, char*>::value && !std::is_same<T, uint8_t*>::value, T>::type
-{
-    using type = T;
-};
+struct non_numeric : std::enable_if<!std::is_arithmetic<T>::value> { };
 
 
 /**
@@ -57,20 +53,21 @@ public:
     // Convenient version, returns an std::string.
     static std::string encode(const uint8_t* binary, size_t binary_size);
     static std::string encode(const char* binary, size_t binary_size);
-    template<typename T> static std::string encode(const T& binary);
+    // static std::string encode(const T& binary); -> provided by template below
 
     // Convenient version with templated result type.
-    template<typename Result> static Result encode(const uint8_t* binary, size_t binary_size);
-    template<typename Result> static Result encode(const char* binary, size_t binary_size);
-    template<typename Result, typename T> static Result encode(const T& binary);
+    template <typename Result> static Result encode(const uint8_t* binary, size_t binary_size);
+    template <typename Result> static Result encode(const char* binary, size_t binary_size);
+    template <typename Result = std::string, typename T = std::vector<uint8_t>>
+    static Result encode(const T& binary);
 
     // Reused result container version. Resizes encoded_result before writing to it.
-    template<typename Result>
+    template <typename Result>
     static void encode(Result& encoded_result, const uint8_t* binary, size_t binary_size);
-    template<typename Result>
+    template <typename Result>
     static void encode(Result& encoded_result, const char* binary, size_t binary_size);
-    template<typename Result, typename T>
-    static void encode(typename non_char_ptr<Result>::type& encoded_result, const T& binary);
+    template <typename Result, typename T, typename non_numeric<T>::type* = nullptr>
+    static void encode(Result& encoded_result, const T& binary);
 
     // Raw pointer output, assumes pre-allocated memory with size > encoded_size(binary_size).
     static size_t encode(
@@ -92,17 +89,18 @@ public:
 
     // Convenient version, returns an std::vector<uint8_t>.
     static std::vector<uint8_t> decode(const char* encoded, size_t encoded_size);
-    template<typename T> static std::vector<uint8_t> decode(const T& encoded);
+    // static std::vector<uint8_t> decode(const T& encoded); -> provided by template below
 
     // Convenient version with templated result type.
-    template<typename Result> static Result decode(const char* encoded, size_t encoded_size);
-    template<typename Result, typename T> static Result decode(const T& encoded);
+    template <typename Result> static Result decode(const char* encoded, size_t encoded_size);
+    template <typename Result = std::vector<uint8_t>, typename T = std::string>
+    static Result decode(const T& encoded);
 
     // Reused result container version. Resizes binary_result before writing to it.
-    template<typename Result>
+    template <typename Result>
     static void decode(Result& binary_result, const char* encoded, size_t encoded_size);
-    template<typename Result, typename T>
-    static void decode(typename non_char_ptr<Result>::type& binary_result, const T& encoded);
+    template <typename Result, typename T, typename non_numeric<T>::type* = nullptr>
+    static void decode(Result& binary_result, const T& encoded);
 
     // Raw pointer output, assumes pre-allocated memory with size > decoded_max_size(encoded_size).
     static size_t decode(
@@ -141,13 +139,6 @@ inline std::string codec<CodecImpl>::encode(const char* binary, size_t binary_si
 }
 
 template <typename CodecImpl>
-template <typename T>
-inline std::string codec<CodecImpl>::encode(const T& binary)
-{
-    return encode<std::string>(binary);
-}
-
-template <typename CodecImpl>
 template <typename Result>
 inline Result codec<CodecImpl>::encode(const uint8_t* binary, size_t binary_size)
 {
@@ -164,7 +155,7 @@ inline Result codec<CodecImpl>::encode(const char* binary, size_t binary_size)
 }
 
 template <typename CodecImpl>
-template<typename Result, typename T>
+template <typename Result, typename T>
 inline Result codec<CodecImpl>::encode(const T& binary)
 {
     return encode<Result>(data::uchar_data(binary), data::size(binary));
@@ -190,12 +181,12 @@ template <typename Result>
 inline void codec<CodecImpl>::encode(
     Result& encoded_result, const char* binary, size_t binary_size)
 {
-    return encode(encoded_result, reinterpret_cast<const uint8_t*>(binary), binary_size);
+    encode(encoded_result, reinterpret_cast<const uint8_t*>(binary), binary_size);
 }
 
 template <typename CodecImpl>
-template <typename Result, typename T>
-inline void codec<CodecImpl>::encode(typename non_char_ptr<Result>::type& encoded_result, const T& binary)
+template <typename Result, typename T, typename non_numeric<T>::type*>
+inline void codec<CodecImpl>::encode(Result& encoded_result, const T& binary)
 {
     encode(encoded_result, data::uchar_data(binary), data::size(binary));
 }
@@ -209,10 +200,11 @@ inline size_t codec<CodecImpl>::encode(
     data::raw_result_buffer encoded(encoded_result, encoded_buffer_size);
     encode(encoded, binary, binary_size);
 
-    if (data::size(encoded) < encoded_buffer_size) {
-        encoded_result[data::size(encoded)] = '\0';
+    size_t encoded_size = data::size(encoded);
+    if (encoded_size < encoded_buffer_size) {
+        encoded_result[encoded_size] = '\0';
     }
-    return data::size(encoded);
+    return encoded_size;
 }
 
 template <typename CodecImpl>
@@ -251,12 +243,6 @@ inline std::vector<uint8_t> codec<CodecImpl>::decode(const char* encoded, size_t
 }
 
 template <typename CodecImpl>
-template <typename T> inline std::vector<uint8_t> codec<CodecImpl>::decode(const T& encoded)
-{
-    return decode<std::vector<uint8_t>>(encoded);
-}
-
-template <typename CodecImpl>
 template <typename Result>
 inline Result codec<CodecImpl>::decode(const char* encoded, size_t encoded_size)
 {
@@ -269,7 +255,7 @@ template <typename CodecImpl>
 template <typename Result, typename T>
 inline Result codec<CodecImpl>::decode(const T& encoded)
 {
-    return decode(data::char_data(encoded), data::size(encoded));
+    return decode<Result>(data::char_data(encoded), data::size(encoded));
 }
 
 template <typename CodecImpl>
@@ -288,8 +274,8 @@ inline void codec<CodecImpl>::decode(Result& binary_result, const char* encoded,
 
 
 template <typename CodecImpl>
-template <typename Result, typename T>
-inline void codec<CodecImpl>::decode(typename non_char_ptr<Result>::type& binary_result, const T& encoded)
+template <typename Result, typename T, typename non_numeric<T>::type*>
+inline void codec<CodecImpl>::decode(Result& binary_result, const T& encoded)
 {
     decode(binary_result, data::char_data(encoded), data::size(encoded));
 }
@@ -299,10 +285,7 @@ inline size_t codec<CodecImpl>::decode(
         uint8_t* binary_result, size_t binary_buffer_size,
         const char* encoded, size_t encoded_size)
 {
-    // This overload is where we wrap the result pointer & size.
-    data::raw_result_buffer binary(binary_result, binary_buffer_size);
-    decode(binary, encoded, encoded_size);
-    return data::size(binary);
+    return decode(reinterpret_cast<char*>(binary_result), binary_buffer_size, encoded, encoded_size);
 }
 
 template <typename CodecImpl>
@@ -310,7 +293,10 @@ inline size_t codec<CodecImpl>::decode(
         char* binary_result, size_t binary_buffer_size,
         const char* encoded, size_t encoded_size)
 {
-    return decode(reinterpret_cast<uint8_t*>(binary_result), binary_buffer_size, encoded, encoded_size);
+    // This overload is where we wrap the result pointer & size.
+    data::raw_result_buffer binary(binary_result, binary_buffer_size);
+    decode(binary, encoded, encoded_size);
+    return data::size(binary);
 }
 
 template <typename CodecImpl>
@@ -318,14 +304,14 @@ template <typename T>
 inline size_t codec<CodecImpl>::decode(
         uint8_t* binary_result, size_t binary_buffer_size, const T& encoded)
 {
-    return decode(binary_result, binary_buffer_size, data::char_data(encoded), data::size(encoded));
+    return decode(reinterpret_cast<char*>(binary_result), binary_buffer_size, encoded);
 }
 
 template <typename CodecImpl>
 template <typename T>
 inline size_t codec<CodecImpl>::decode(char* binary_result, size_t binary_buffer_size, const T& encoded)
 {
-    return decode(reinterpret_cast<uint8_t*>(binary_result), binary_buffer_size, encoded);
+    return decode(binary_result, binary_buffer_size, data::char_data(encoded), data::size(encoded));
 }
 
 template <typename CodecImpl>

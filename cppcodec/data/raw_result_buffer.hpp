@@ -36,22 +36,33 @@ namespace data {
 class raw_result_buffer
 {
 public:
+    raw_result_buffer(char* data, size_t capacity)
+        : m_ptr(data + capacity)
+        , m_begin(data)
+    {
+    }
+
     char last() const { return *(m_ptr - 1); }
     void push_back(char c) { *m_ptr = c; ++m_ptr; }
-    size_t size() const { return m_size; }
+    size_t size() const { return m_ptr - m_begin; }
+    void resize(size_t size) { m_ptr = m_begin + size; }
 
 private:
     char* m_ptr;
-    size_t m_size;
+    char* m_begin;
 };
 
 
 template <> inline void init<raw_result_buffer>(
         raw_result_buffer& result, empty_result_state&, size_t capacity)
 {
+    // This version of init() doesn't do a reserve(), and instead checks whether the
+    // initial size (capacity) is enough before resizing to 0.
+    // The codec is expected not to exceed this capacity.
     if (capacity > result.size()) {
         abort();
     }
+    result.resize(0);
 }
 template <> inline void finish<raw_result_buffer>(raw_result_buffer& result, empty_result_state&) { }
 
