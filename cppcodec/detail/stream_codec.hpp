@@ -52,12 +52,16 @@ inline void stream_codec<Codec, CodecVariant>::encode(
         Result& encoded_result, ResultState& state,
         const uint8_t* src, size_t src_size)
 {
-    const uint8_t* src_end = src + src_size - Codec::binary_block_size();
+    const uint8_t* src_end = src + src_size;
 
-    for (; src <= src_end; src += Codec::binary_block_size()) {
-        Codec::encode_block(encoded_result, state, src);
+    if (src_size >= Codec::binary_block_size()) {
+        src_end -= Codec::binary_block_size();
+
+        for (; src <= src_end; src += Codec::binary_block_size()) {
+            Codec::encode_block(encoded_result, state, src);
+        }
+        src_end += Codec::binary_block_size();
     }
-    src_end += Codec::binary_block_size();
 
     if (src_end > src) {
         auto remaining_src_len = src_end - src;
