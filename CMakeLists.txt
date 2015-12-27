@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(cppcodec)
 
+option(build_tests "Build tests (run as 'test' target)" ON)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(PUBLIC_HEADERS
@@ -31,6 +33,10 @@ set(PUBLIC_HEADERS
 
 add_library(cppcodec OBJECT ${PUBLIC_HEADERS})
 add_subdirectory(tool)
+
+if (build_tests)
+    add_subdirectory(test)
+endif()
 
 foreach(h ${PUBLIC_HEADERS})
     get_filename_component(HEADER_INCLUDE_DIRECTORY include/${h} PATH) # use DIRECTORY instead of PATH once requiring CMake 3.0
