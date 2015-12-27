@@ -157,9 +157,10 @@ inline constexpr size_t stream_codec<Codec, CodecVariant>::decoded_max_size(size
     using C = Codec;
 
     return CodecVariant::requires_padding()
-            ? encoded_size * C::binary_block_size() / C::encoded_block_size()
-            : (encoded_size * C::binary_block_size() / C::encoded_block_size())
-                    + (((encoded_size * C::binary_block_size()) % C::encoded_block_size()) ? 1 : 0);
+            ? (encoded_size / C::encoded_block_size() * C::binary_block_size())
+            : (encoded_size / C::encoded_block_size() * C::binary_block_size())
+                    + ((encoded_size % C::encoded_block_size())
+                            * C::binary_block_size() / C::encoded_block_size());
 }
 
 } // namespace detail
