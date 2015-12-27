@@ -118,6 +118,18 @@ TEST_CASE("Douglas Crockford's base32", "[base32][crockford]") {
         // Lowercase should decode just as well as uppercase.
         REQUIRE(base32::decode<std::string>("AXQQEB10D5T20WK5C5P6RY90EXQQ4TVK44") == "Wow, it really works!");
         REQUIRE(base32::decode<std::string>("axqqeb10d5t20wk5c5p6ry90exqq4tvk44") == "Wow, it really works!");
+
+        // An invalid number of symbols should throw the right kind of parse_error.
+        REQUIRE_THROWS_AS(base32::decode("0"), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000"), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000000"), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000000000"), cppcodec::invalid_input_length&);
+
+        // An invalid symbol should throw a symbol error.
+        REQUIRE_THROWS_AS(base32::decode("00======"), cppcodec::symbol_error&); // no padding for Crockford
+        REQUIRE_THROWS_AS(base32::decode("Uu"), cppcodec::symbol_error&); // only a checksum symbol here
+        REQUIRE_THROWS_AS(base32::decode("++"), cppcodec::symbol_error&); // make sure it's not base64
+        REQUIRE_THROWS_AS(base32::decode("//"), cppcodec::symbol_error&); // ...ditto
     }
 
     // Only test overloads once (for base32_crockford, since it happens to be the first one).
@@ -153,9 +165,15 @@ TEST_CASE("Douglas Crockford's base32", "[base32][crockford]") {
         REQUIRE(result_size == hello_char_vector_encoded.size());
         REQUIRE(hello_char_result == hello_char_vector_encoded);
 
+        // Test that when passed a larger buffer, the null termination character will be written
+        // after the last proper symbol. (Also test uint8_t* overload.)
+        hello_char_result.resize(hello_char_result.size() + 1);
+        hello_char_result[hello_char_result.size() - 1] = 'x';
         result_size = base32::encode(
                 hello_char_result.data(), hello_char_result.size(), hello_uint_ptr, hello.size());
         REQUIRE(result_size == hello_char_vector_encoded.size());
+        REQUIRE(hello_char_result[hello_char_result.size() - 1] == '\0');
+        hello_char_result.resize(hello_char_result.size() - 1);
         REQUIRE(hello_char_result == hello_char_vector_encoded);
     }
 
@@ -324,5 +342,16 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE(base64::decode<std::string>("Zm9vYg==") == "foob");
         REQUIRE(base64::decode<std::string>("Zm9vYmE=") == "fooba");
         REQUIRE(base64::decode<std::string>("Zm9vYmFy") == "foobar");
+
+        // An invalid number of symbols should throw the right kind of parse_error.
+        REQUIRE_THROWS_AS(base64::decode("A"), cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("AA"), cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("A==="), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base64::decode("AAAA===="), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base64::decode("AAAAA==="), cppcodec::invalid_input_length&);
+
+        // An invalid symbol should throw a symbol error.
+        REQUIRE_THROWS_AS(base64::decode("--"), cppcodec::symbol_error&); // this is not base64url
+        REQUIRE_THROWS_AS(base64::decode("__"), cppcodec::symbol_error&); // ...ditto
     }
 }

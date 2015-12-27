@@ -103,6 +103,11 @@ inline void stream_codec<Codec, CodecVariant>::decode(
 
     uint8_t last_idx = last_value_idx;
     if (CodecVariant::is_padding_symbol(idx[last_idx])) {
+        if (!last_idx) {
+            // Don't accept padding at the start of a block.
+            // The encoder should have omitted that padding altogether.
+            throw padding_error();
+        }
         // We're in here because we just read a (first) padding character. Try to read more.
         ++last_idx;
         while (src < src_end) {

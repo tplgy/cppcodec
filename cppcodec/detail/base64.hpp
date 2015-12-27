@@ -206,7 +206,8 @@ inline void base64<CodecVariant>::decode_tail(
         Result& decoded, ResultState& state, const uint8_t* idx, size_t idx_len)
 {
     if (idx_len == 1) {
-        throw parse_error("invalid number of symbols in last base64 block: found 1, expected 2 or 3");
+        throw invalid_input_length(
+                "invalid number of symbols in last base64 block: found 1, expected 2 or 3");
     }
 
     // idx_len == 2: decoded size 1

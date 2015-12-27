@@ -260,13 +260,16 @@ inline void base32<CodecVariant>::decode_tail(
         Result& decoded, ResultState& state, const uint8_t* idx, size_t idx_len)
 {
     if (idx_len == 1) {
-        throw parse_error("invalid number of symbols in last base32 block: found 3, expected 2, 4, 5 or 7");
+        throw invalid_input_length(
+                "invalid number of symbols in last base32 block: found 1, expected 2, 4, 5 or 7");
     }
     if (idx_len == 3) {
-        throw parse_error("invalid number of symbols in last base32 block: found 3, expected 2, 4, 5 or 7");
+        throw invalid_input_length(
+                "invalid number of symbols in last base32 block: found 3, expected 2, 4, 5 or 7");
     }
     if (idx_len == 6) {
-        throw parse_error("invalid number of symbols in last base32 block: found 6, expected 2, 4, 5 or 7");
+        throw invalid_input_length(
+                "invalid number of symbols in last base32 block: found 6, expected 2, 4, 5 or 7");
     }
 
     // idx_len == 2: decoded size 1

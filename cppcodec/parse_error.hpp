@@ -54,11 +54,17 @@ private:
     char m_symbol;
 };
 
-class padding_error : public parse_error
+class invalid_input_length : public parse_error
+{
+public:
+    using parse_error::parse_error;
+};
+
+class padding_error : public invalid_input_length
 {
 public:
     padding_error()
-        : parse_error("parse error: codec expects padded input string but padding was invalid")
+        : invalid_input_length("parse error: codec expects padded input string but padding was invalid")
     {
     }
 
