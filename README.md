@@ -107,7 +107,7 @@ All codecs expose the same API. In the below documentation, replace `<codec>` wi
 default alias such as `base64`, `base32` or `hex`, or with the full namespace such as
 `cppcodec::base64_rfc4648` or `cppcodec::base32_crockford`.
 
-For templated parameters `T` and `Result`, you can use e.g. `std::vector<char>`,
+For templated parameters `T` and `Result`, you can use e.g. `std::vector<uint8_t>`,
 `std::string` or anything that supports:
 * `.data()` and `.size()` for `T` (read-only) template parameters,
 * for `Result` template parameters, also `.reserve(size_t)`, `.resize(size_t)`
@@ -165,9 +165,9 @@ excluding null termination but including padding (if specified by the codec vari
 ## Decoding
 
 ```C++
-// Convenient version, returns an std::vector<char>.
-std::vector<char> <codec>::decode(const char* encoded, size_t encoded_size);
-std::vector<char> <codec>::decode(const T& encoded);
+// Convenient version, returns an std::vector<uint8_t>.
+std::vector<uint8_t> <codec>::decode(const char* encoded, size_t encoded_size);
+std::vector<uint8_t> <codec>::decode(const T& encoded);
 
 // Convenient version with templated result type.
 Result <codec>::decode<Result>(const char* encoded, size_t encoded_size);
