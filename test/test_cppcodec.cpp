@@ -289,10 +289,10 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE(base64::encode(std::string("any carnal pleasu")) == "YW55IGNhcm5hbCBwbGVhc3U=");
         REQUIRE(base64::encode(std::string("any carnal pleasur")) == "YW55IGNhcm5hbCBwbGVhc3Vy");
 
-        // RFC 4648: 9. Illustrations and Examples
-        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0x9C, 0x03, 0xD9, 0x7E})) == "FPucA9l+");
-        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0x9C, 0x03, 0xD9})) == "FPucA9k=");
-        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0x9C, 0x03})) == "FPucAw==");
+        // RFC 4648: 9. Illustrations and Examples, adapted for more special characters
+        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9, 0x7E})) == "FPu/A9l+");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9})) == "FPu/A9k=");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03})) == "FPu/Aw==");
 
         // RFC 4648: 10. Test Vectors
         REQUIRE(base64::encode(std::string("")) == "");
@@ -329,10 +329,10 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE(base64::decode<std::string>("YW55IGNhcm5hbCBwbGVhc3U=") == "any carnal pleasu");
         REQUIRE(base64::decode<std::string>("YW55IGNhcm5hbCBwbGVhc3Vy") == "any carnal pleasur");
 
-        // RFC 4648: 9. Illustrations and Examples
-        REQUIRE(base64::decode("FPucA9l+") == std::vector<uint8_t>({0x14, 0xFB, 0x9C, 0x03, 0xD9, 0x7E}));
-        REQUIRE(base64::decode("FPucA9k=") == std::vector<uint8_t>({0x14, 0xFB, 0x9C, 0x03, 0xD9}));
-        REQUIRE(base64::decode("FPucAw==") == std::vector<uint8_t>({0x14, 0xFB, 0x9C, 0x03}));
+        // RFC 4648: 9. Illustrations and Examples, adapted for more special characters
+        REQUIRE(base64::decode("FPu/A9l+") == std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9, 0x7E}));
+        REQUIRE(base64::decode("FPu/A9k=") == std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9}));
+        REQUIRE(base64::decode("FPu/Aw==") == std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03}));
 
         // RFC 4648: 10. Test Vectors
         REQUIRE(base64::decode<std::string>("") == "");
@@ -353,5 +353,97 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         // An invalid symbol should throw a symbol error.
         REQUIRE_THROWS_AS(base64::decode("--"), cppcodec::symbol_error&); // this is not base64url
         REQUIRE_THROWS_AS(base64::decode("__"), cppcodec::symbol_error&); // ...ditto
+    }
+}
+
+TEST_CASE("base64 (URL-safe)", "[base64][url]") {
+    using base64 = cppcodec::base64_url;
+
+    SECTION("encoded size calculation") {
+        REQUIRE(base64::encoded_size(0) == 0);
+        REQUIRE(base64::encoded_size(1) == 4);
+        REQUIRE(base64::encoded_size(2) == 4);
+        REQUIRE(base64::encoded_size(3) == 4);
+        REQUIRE(base64::encoded_size(4) == 8);
+        REQUIRE(base64::encoded_size(5) == 8);
+        REQUIRE(base64::encoded_size(6) == 8);
+        REQUIRE(base64::encoded_size(7) == 12);
+        REQUIRE(base64::encoded_size(12) == 16);
+    }
+
+    SECTION("maximum decoded size calculation") {
+        REQUIRE(base64::decoded_max_size(0) == 0);
+        REQUIRE(base64::decoded_max_size(1) == 0);
+        REQUIRE(base64::decoded_max_size(2) == 0);
+        REQUIRE(base64::decoded_max_size(3) == 0);
+        REQUIRE(base64::decoded_max_size(4) == 3);
+        REQUIRE(base64::decoded_max_size(5) == 3);
+        REQUIRE(base64::decoded_max_size(6) == 3);
+        REQUIRE(base64::decoded_max_size(7) == 3);
+        REQUIRE(base64::decoded_max_size(8) == 6);
+        REQUIRE(base64::decoded_max_size(9) == 6);
+        REQUIRE(base64::decoded_max_size(10) == 6);
+        REQUIRE(base64::decoded_max_size(11) == 6);
+        REQUIRE(base64::decoded_max_size(12) == 9);
+        REQUIRE(base64::decoded_max_size(16) == 12);
+    }
+
+    SECTION("encoding data") {
+        REQUIRE(base64::encode(std::vector<uint8_t>()) == "");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0})) == "AA==");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0})) == "AAA=");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0, 0})) == "AAAA");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0, 0, 0})) == "AAAAAA==");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0, 0, 0, 0})) == "AAAAAAA=");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0, 0, 0, 0, 0})) == "AAAAAAAA");
+
+        // RFC 4648: 9. Illustrations and Examples, adapted for more special characters
+        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9, 0x7E})) == "FPu_A9l-");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9})) == "FPu_A9k=");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03})) == "FPu_Aw==");
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(base64::encode(std::string("")) == "");
+        REQUIRE(base64::encode(std::string("f")) == "Zg==");
+        REQUIRE(base64::encode(std::string("fo")) == "Zm8=");
+        REQUIRE(base64::encode(std::string("foo")) == "Zm9v");
+        REQUIRE(base64::encode(std::string("foob")) == "Zm9vYg==");
+        REQUIRE(base64::encode(std::string("fooba")) == "Zm9vYmE=");
+        REQUIRE(base64::encode(std::string("foobar")) == "Zm9vYmFy");
+    }
+
+    SECTION("decoding data") {
+        REQUIRE(base64::decode("") == std::vector<uint8_t>());
+        REQUIRE(base64::decode("AA==") == std::vector<uint8_t>({0}));
+        REQUIRE(base64::decode("AAA=") == std::vector<uint8_t>({0, 0}));
+        REQUIRE(base64::decode("AAAA") == std::vector<uint8_t>({0, 0, 0}));
+        REQUIRE(base64::decode("AAAAAA==") == std::vector<uint8_t>({0, 0, 0, 0}));
+        REQUIRE(base64::decode("AAAAAAA=") == std::vector<uint8_t>({0, 0, 0, 0, 0}));
+        REQUIRE(base64::decode("AAAAAAAA") == std::vector<uint8_t>({0, 0, 0, 0, 0, 0}));
+
+        // RFC 4648: 9. Illustrations and Examples, adapted for more special characters
+        REQUIRE(base64::decode("FPu_A9l-") == std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9, 0x7E}));
+        REQUIRE(base64::decode("FPu_A9k=") == std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9}));
+        REQUIRE(base64::decode("FPu_Aw==") == std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03}));
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(base64::decode<std::string>("") == "");
+        REQUIRE(base64::decode<std::string>("Zg==") == "f");
+        REQUIRE(base64::decode<std::string>("Zm8=") == "fo");
+        REQUIRE(base64::decode<std::string>("Zm9v") == "foo");
+        REQUIRE(base64::decode<std::string>("Zm9vYg==") == "foob");
+        REQUIRE(base64::decode<std::string>("Zm9vYmE=") == "fooba");
+        REQUIRE(base64::decode<std::string>("Zm9vYmFy") == "foobar");
+
+        // An invalid number of symbols should throw the right kind of parse_error.
+        REQUIRE_THROWS_AS(base64::decode("A"), cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("AA"), cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("A==="), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base64::decode("AAAA===="), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base64::decode("AAAAA==="), cppcodec::invalid_input_length&);
+
+        // An invalid symbol should throw a symbol error.
+        REQUIRE_THROWS_AS(base64::decode("++"), cppcodec::symbol_error&); // this is not standard base64
+        REQUIRE_THROWS_AS(base64::decode("//"), cppcodec::symbol_error&); // ...ditto
     }
 }
