@@ -3,11 +3,7 @@
 cppcodec is in pretty good shape already.
 Here are a number of things I'd like to do still:
 
-* Add test framework and tests. Probably Catch, it's good and simple and has
-  no dependencies that always fail to build for people like with GTest.
-
-* Make the command line tools nicer. I should be able to select the variant
-  for the tool's codec family, and be able to pipe input data through stdin.
+* Stuff in the GitHub issues list.
 
 * Implement place-based single number codecs (as opposed to stream codecs) that
   view the entire input string as a single number and therefore zero-extend

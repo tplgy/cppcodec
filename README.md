@@ -1,7 +1,8 @@
 # cppcodec
 
-Header-only C++11 library to encode/decode base64, (Crockford) base32 and hex (a.k.a. base16).
-MIT licensed with consistent, flexible API. Supports raw pointers, `std::string` and
+Header-only C++11 library to encode/decode base64 (standard, URL-safe),
+base32 (RFC 4648, Crockford) and hex (a.k.a. base16). MIT licensed with
+consistent, flexible API. Supports raw pointers, `std::string` and
 (templated) character vectors without unnecessary allocations.
 
 
@@ -116,7 +117,7 @@ For templated parameters `T` and `Result`, you can use e.g. `std::vector<uint8_t
 It's possible to support types lacking these functions, consult the code directly if you need this.
 
 
-## Encoding
+### Encoding
 
 ```C++
 // Convenient version, returns an std::string.
@@ -162,7 +163,7 @@ Calculate the (exact) length of the encoded string based on binary size,
 excluding null termination but including padding (if specified by the codec variant).
 
 
-## Decoding
+### Decoding
 
 ```C++
 // Convenient version, returns an std::vector<uint8_t>.
