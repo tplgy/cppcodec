@@ -134,7 +134,7 @@ void <codec>::encode(Result& encoded_result, const T& binary);
 ```
 
 Encode binary data into an encoded (base64/base32/hex) string.
-Won't throw by itself, but the string type might throw on `.resize()`.
+Won't throw by itself, but the result type might throw on `.resize()`.
 
 ```C++
 size_t <codec>::encode(char* encoded_result, size_t encoded_buffer_size, const [uint8_t|char]* binary, size_t binary_size) noexcept;
@@ -181,6 +181,10 @@ void <codec>::decode(Result& binary_result, const T& encoded);
 
 Decode an encoded (base64/base32/hex) string into a binary buffer.
 
+Throws a cppcodec::parse_error exception (inheriting from std::domain_error)
+if the input data does not conform to the codec variant specification.
+Also, the result type might throw on `.resize()`.
+
 ```C++
 size_t <codec>::decode([uint8_t|char]* binary_result, size_t binary_buffer_size, const char* encoded, size_t encoded_size);
 size_t <codec>::decode([uint8_t|char]* binary_result, size_t binary_buffer_size, const T& encoded);
@@ -192,7 +196,7 @@ Decode an encoded string into pre-allocated memory with a buffer size of
 Returns the byte size of the decoded binary data, which is less or equal to
 `<codec>::decoded_max_size(encoded_size)`.
 
-Calls abort() if `binary_buffer_size` is insufficient (for consistency with encode()).
+Calls abort() if `binary_buffer_size` is insufficient, for consistency with encode().
 Throws a cppcodec::parse_error exception (inheriting from std::domain_error)
 if the input data does not conform to the codec variant specification.
 
@@ -202,8 +206,9 @@ size_t <codec>::decoded_max_size(size_t encoded_size) noexcept;
 
 Calculate the maximum size of the decoded binary buffer based on the encoded string length.
 
-If the codec variant does not allow padding or line breaks, the maximum decoded size will be the exact decoded size.
+If the codec variant does not allow padding or whitespace / line breaks,
+the maximum decoded size will be the exact decoded size.
 
-If the codec variant allows padding or line breaks, the actual decoded size might be smaller.
-If you're using the pre-allocated memory result call, make sure to take its return value
-(the actual decoded size) into account.
+If the codec variant allows padding or whitespace / line breaks, the actual decoded size
+might be smaller. If you're using the pre-allocated memory result call, make sure to take
+its return value (the actual decoded size) into account.
