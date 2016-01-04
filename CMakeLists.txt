@@ -3,7 +3,9 @@ project(cppcodec)
 
 option(build_tests "Build tests (run as 'test' target)" ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# These flags are for binaries built by this particular CMake project (test_cppcodec, base64enc, etc.).
+# In your own project that uses cppcodec, you might want to specify a different standard or error level.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic")
 
 set(PUBLIC_HEADERS
     # base32
@@ -31,7 +33,7 @@ set(PUBLIC_HEADERS
     cppcodec/detail/hex.hpp
     cppcodec/detail/stream_codec.hpp)
 
-add_library(cppcodec OBJECT ${PUBLIC_HEADERS})
+add_library(cppcodec OBJECT ${PUBLIC_HEADERS}) # unnecessary for building, but makes headers show up in IDEs
 add_subdirectory(tool)
 
 if (build_tests)
