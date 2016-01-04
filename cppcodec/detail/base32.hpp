@@ -181,12 +181,12 @@ inline void base32<CodecVariant>::encode_block(
 {
     using V = CodecVariant;
     data::put(encoded, state, V::symbol((src[0] >> 3) & 0x1F)); // first 5 bits
-    data::put(encoded, state, V::symbol((src[0] << 2) & 0x1C | ((src[1] >> 6) & 0x3))); // last 3 + next 2
+    data::put(encoded, state, V::symbol(((src[0] << 2) & 0x1C) | ((src[1] >> 6) & 0x3))); // last 3 + next 2
     data::put(encoded, state, V::symbol((src[1] >> 1) & 0x1F)); // next 5 bits (tail has 1 bit)
-    data::put(encoded, state, V::symbol((src[1] << 4) & 0x10 | ((src[2] >> 4) & 0xF))); // last 1 + next 4
-    data::put(encoded, state, V::symbol((src[2] << 1) & 0x1E | ((src[3] >> 7) & 0x1)));
+    data::put(encoded, state, V::symbol(((src[1] << 4) & 0x10) | ((src[2] >> 4) & 0xF))); // last 1 + next 4
+    data::put(encoded, state, V::symbol(((src[2] << 1) & 0x1E) | ((src[3] >> 7) & 0x1)));
     data::put(encoded, state, V::symbol((src[3] >> 2) & 0x1F));
-    data::put(encoded, state, V::symbol((src[3] << 3) & 0x18 | ((src[4] >> 5) & 0x7)));
+    data::put(encoded, state, V::symbol(((src[3] << 3) & 0x18) | ((src[4] >> 5) & 0x7)));
     data::put(encoded, state, V::symbol((src[4] & 0x1F)));
 }
 
@@ -202,18 +202,18 @@ inline void base32<CodecVariant>::encode_tail(
         data::put(encoded, state, V::symbol((src[0] << 2) & 0x1C)); // size 2
         return;
     }
-    data::put(encoded, state, V::symbol((src[0] << 2) & 0x1C | (src[1] >> 6) & 0x3)); // size 2
+    data::put(encoded, state, V::symbol(((src[0] << 2) & 0x1C) | ((src[1] >> 6) & 0x3))); // size 2
     data::put(encoded, state, V::symbol((src[1] >> 1) & 0x1F)); // size 3
     if (remaining_src_len == 2) {
         data::put(encoded, state, V::symbol((src[1] << 4) & 0x10)); // size 4
         return;
     }
-    data::put(encoded, state, V::symbol((src[1] << 4) & 0x10 | (src[2] >> 4) & 0xF)); // size 4
+    data::put(encoded, state, V::symbol(((src[1] << 4) & 0x10) | ((src[2] >> 4) & 0xF))); // size 4
     if (remaining_src_len == 3) {
         data::put(encoded, state, V::symbol((src[2] << 1) & 0x1E)); // size 5
         return;
     }
-    data::put(encoded, state, V::symbol((src[2] << 1) & 0x1E | (src[3] >> 7) & 0x1)); // size 5
+    data::put(encoded, state, V::symbol(((src[2] << 1) & 0x1E) | ((src[3] >> 7) & 0x1))); // size 5
     data::put(encoded, state, V::symbol((src[3] >> 2) & 0x1F)); // size 6
     if (remaining_src_len == 4) {
         data::put(encoded, state, V::symbol((src[3] << 3) & 0x18)); // size 7
