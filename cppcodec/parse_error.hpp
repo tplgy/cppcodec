@@ -40,8 +40,7 @@ class symbol_error : public parse_error
 {
 public:
     symbol_error(char c)
-        : parse_error(static_cast<std::ostringstream&>(std::ostringstream() << "parse error: "
-                "character [" << static_cast<int>(c) << " '" << c << "'] out of bounds").str())
+        : parse_error(symbol_error::make_error_message(c))
         , m_symbol(c)
     {
     }
@@ -49,6 +48,14 @@ public:
     symbol_error(const symbol_error&) = default;
 
     char symbol() const noexcept { return m_symbol; }
+
+private:
+    static std::string make_error_message(char c)
+    {
+        std::ostringstream o;
+        o << "parse error: character [" << static_cast<int>(c) << " '" << c << "'] out of bounds";
+        return o.str();
+    }
 
 private:
     char m_symbol;
