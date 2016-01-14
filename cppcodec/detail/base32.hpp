@@ -85,7 +85,7 @@ public:
                 : throw symbol_error(c);
     }
 
-    static inline constexpr bool should_ignore(uint8_t index) { return index == -1; }
+    static inline constexpr bool should_ignore(uint8_t index) { return index == 253; }
     static inline constexpr bool is_special_character(uint8_t index) { return index > 32; }
     static inline constexpr bool is_eof(uint8_t index) { return index == 255; }
 };

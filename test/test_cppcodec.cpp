@@ -119,6 +119,9 @@ TEST_CASE("Douglas Crockford's base32", "[base32][crockford]") {
         REQUIRE(base32::decode<std::string>("AXQQEB10D5T20WK5C5P6RY90EXQQ4TVK44") == "Wow, it really works!");
         REQUIRE(base32::decode<std::string>("axqqeb10d5t20wk5c5p6ry90exqq4tvk44") == "Wow, it really works!");
 
+        // Dashes are allowed for visual separation and ignored when decoding.
+        REQUIRE(base32::decode<std::string>("-C-SQ--PY-") == "foo");
+
         // An invalid number of symbols should throw the right kind of parse_error.
         REQUIRE_THROWS_AS(base32::decode("0"), cppcodec::invalid_input_length&);
         REQUIRE_THROWS_AS(base32::decode("000"), cppcodec::invalid_input_length&);
