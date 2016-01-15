@@ -65,19 +65,20 @@ public:
     static inline constexpr uint8_t binary_block_size() { return 1; }
     static inline constexpr uint8_t encoded_block_size() { return 2; }
 
-    template <typename Result, typename ResultState> static void encode_block(
-            Result& encoded, ResultState&, const uint8_t* src);
+    template <typename Result, typename ResultState>
+    static void encode_block(Result& encoded, ResultState&, const uint8_t* src);
 
-    template <typename Result, typename ResultState> static void encode_tail(
-            Result& encoded, ResultState&, const uint8_t* src, size_t src_len);
+    template <typename Result, typename ResultState>
+    static void encode_tail(Result& encoded, ResultState&, const uint8_t* src, size_t src_len);
 
-    template <typename Result, typename ResultState> static void pad(Result&, ResultState&, size_t) { }
+    template <typename Result, typename ResultState>
+    static void pad(Result&, ResultState&, size_t) { }
 
-    template <typename Result, typename ResultState> static void decode_block(
-            Result& decoded, ResultState&, const uint8_t* idx);
+    template <typename Result, typename ResultState>
+    static void decode_block(Result& decoded, ResultState&, const uint8_t* idx);
 
-    template <typename Result, typename ResultState> static void decode_tail(
-            Result& decoded, ResultState&, const uint8_t* idx, size_t idx_len);
+    template <typename Result, typename ResultState>
+    static void decode_tail(Result& decoded, ResultState&, const uint8_t* idx, size_t idx_len);
 };
 
 
