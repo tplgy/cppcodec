@@ -64,7 +64,7 @@ template <> inline void init<raw_result_buffer>(
     }
     result.resize(0);
 }
-template <> inline void finish<raw_result_buffer>(raw_result_buffer& result, empty_result_state&) { }
+template <> inline void finish<raw_result_buffer>(raw_result_buffer&, empty_result_state&) { }
 
 } // namespace data
 } // namespace cppcodec
