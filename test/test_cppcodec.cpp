@@ -314,6 +314,10 @@ TEST_CASE("base32 (RFC 4648)", "[base32][rfc4648]") {
         REQUIRE(base32::decode<std::string>("MZXW6YTB") == "fooba");
         REQUIRE(base32::decode<std::string>("MZXW6YTBOI======") == "foobar");
 
+        // Lowercase should decode just as well as uppercase.
+        REQUIRE(base32::decode<std::string>("mzxw6yTb") == "fooba");
+        REQUIRE(base32::decode<std::string>("mZxW6yTb") == "fooba");
+
         // An invalid number of symbols should throw the right kind of parse_error.
         REQUIRE_THROWS_AS(base32::decode("A"), cppcodec::padding_error&);
         REQUIRE_THROWS_AS(base32::decode("AA"), cppcodec::padding_error&);
