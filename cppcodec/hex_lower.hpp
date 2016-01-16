@@ -28,7 +28,30 @@
 #include "detail/hex.hpp"
 
 namespace cppcodec {
+
+namespace detail {
+
+static constexpr const char hex_lower_alphabet[] = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', // at index 10
+        'a', 'b', 'c', 'd', 'e', 'f'
+};
+static_assert(sizeof(hex_lower_alphabet) == 16, "hex alphabet must have 16 values");
+
+class hex_lower : public hex_base
+{
+public:
+    template <typename Codec> using codec_impl = stream_codec<Codec, hex_lower>;
+
+    static inline constexpr char symbol(uint8_t index)
+    {
+        return hex_lower_alphabet[index];
+    }
+};
+
+} // namespace detail
+
 using hex_lower = detail::codec<detail::hex<detail::hex_lower>>;
-}
+
+} // namespace cppcodec
 
 #endif // CPPCODEC_HEX_LOWER

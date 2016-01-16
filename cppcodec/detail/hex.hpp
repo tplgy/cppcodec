@@ -58,40 +58,6 @@ public:
     static inline constexpr bool is_padding_symbol(uint8_t /*index*/) { return false; }
 };
 
-static constexpr const char hex_upper_alphabet[] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        'A', 'B', 'C', 'D', 'E', 'F'
-};
-static_assert(sizeof(hex_upper_alphabet) == 16, "hex alphabet must have 16 values");
-
-static constexpr const char hex_lower_alphabet[] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', // at index 10
-        'a', 'b', 'c', 'd', 'e', 'f'
-};
-static_assert(sizeof(hex_lower_alphabet) == 16, "hex alphabet must have 16 values");
-
-class hex_upper : public hex_base
-{
-public:
-    template <typename Codec> using codec_impl = stream_codec<Codec, hex_upper>;
-
-    static inline constexpr char symbol(uint8_t index)
-    {
-        return hex_upper_alphabet[index];
-    }
-};
-
-class hex_lower : public hex_base
-{
-public:
-    template <typename Codec> using codec_impl = stream_codec<Codec, hex_lower>;
-
-    static inline constexpr char symbol(uint8_t index)
-    {
-        return hex_lower_alphabet[index];
-    }
-};
-
 template <typename CodecVariant>
 class hex : public CodecVariant::template codec_impl<hex<CodecVariant>>
 {
