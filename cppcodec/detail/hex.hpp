@@ -112,7 +112,8 @@ template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void hex<CodecVariant>::decode_tail(Result&, ResultState&, const uint8_t*, size_t)
 {
-    throw parse_error("odd-length hex input is not supported by the streaming octet decoder, "
+    throw invalid_input_length(
+            "odd-length hex input is not supported by the streaming octet decoder, "
             "use a place-based number decoder instead");
 }
 

@@ -278,9 +278,6 @@ TEST_CASE("base32 (RFC 4648)", "[base32][rfc4648]") {
         REQUIRE(base32::encode(std::string("12345")) == "GEZDGNBV");
         REQUIRE(base32::encode("12345") == "GEZDGNBVAA======");
 
-        REQUIRE(base32::encode(std::string("ABCDE")) == "IFBEGRCF");
-        REQUIRE(base32::encode(std::vector<uint8_t>({255, 255, 255, 255, 255})) == "77777777");
-
         // RFC 4648: 10. Test Vectors
         REQUIRE(base32::encode(std::string("")) == "");
         REQUIRE(base32::encode(std::string("f")) == "MY======");
@@ -289,6 +286,10 @@ TEST_CASE("base32 (RFC 4648)", "[base32][rfc4648]") {
         REQUIRE(base32::encode(std::string("foob")) == "MZXW6YQ=");
         REQUIRE(base32::encode(std::string("fooba")) == "MZXW6YTB");
         REQUIRE(base32::encode(std::string("foobar")) == "MZXW6YTBOI======");
+
+        // Other test strings.
+        REQUIRE(base32::encode(std::string("ABCDE")) == "IFBEGRCF");
+        REQUIRE(base32::encode(std::vector<uint8_t>({255, 255, 255, 255, 255})) == "77777777");
     }
 
     SECTION("decoding data") {
@@ -313,6 +314,10 @@ TEST_CASE("base32 (RFC 4648)", "[base32][rfc4648]") {
         REQUIRE(base32::decode<std::string>("MZXW6YQ=") == "foob");
         REQUIRE(base32::decode<std::string>("MZXW6YTB") == "fooba");
         REQUIRE(base32::decode<std::string>("MZXW6YTBOI======") == "foobar");
+
+        // Other test strings.
+        REQUIRE(base32::decode<std::string>("IFBEGRCF") == "ABCDE");
+        REQUIRE(base32::decode("77777777") == std::vector<uint8_t>({255, 255, 255, 255, 255}));
 
         // Lowercase should decode just as well as uppercase.
         REQUIRE(base32::decode<std::string>("mzxw6yTb") == "fooba");
@@ -407,6 +412,11 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE(base64::encode(std::string("foob")) == "Zm9vYg==");
         REQUIRE(base64::encode(std::string("fooba")) == "Zm9vYmE=");
         REQUIRE(base64::encode(std::string("foobar")) == "Zm9vYmFy");
+
+        // Other test strings.
+        REQUIRE(base64::encode(std::string("123")) == "MTIz");
+        REQUIRE(base64::encode(std::string("ABC")) == "QUJD");
+        REQUIRE(base64::encode(std::string("\xFF\xFF\xFF")) == "////");
     }
 
     SECTION("decoding data") {
@@ -448,14 +458,21 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE(base64::decode<std::string>("Zm9vYmE=") == "fooba");
         REQUIRE(base64::decode<std::string>("Zm9vYmFy") == "foobar");
 
+        // Other test strings.
+        REQUIRE(base64::decode<std::string>("MTIz") == "123");
+        REQUIRE(base64::decode<std::string>("QUJD") == "ABC");
+        REQUIRE(base64::decode("////") == std::vector<uint8_t>({255, 255, 255}));
+
         // An invalid number of symbols should throw the right kind of parse_error.
         REQUIRE_THROWS_AS(base64::decode("A"), cppcodec::padding_error&);
         REQUIRE_THROWS_AS(base64::decode("AA"), cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("ABCDE"), cppcodec::padding_error&);
         REQUIRE_THROWS_AS(base64::decode("A==="), cppcodec::invalid_input_length&);
         REQUIRE_THROWS_AS(base64::decode("AAAA===="), cppcodec::invalid_input_length&);
         REQUIRE_THROWS_AS(base64::decode("AAAAA==="), cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
+        REQUIRE_THROWS_AS(base64::decode("A&B="), cppcodec::symbol_error&);
         REQUIRE_THROWS_AS(base64::decode("--"), cppcodec::symbol_error&); // this is not base64url
         REQUIRE_THROWS_AS(base64::decode("__"), cppcodec::symbol_error&); // ...ditto
     }
@@ -515,6 +532,11 @@ TEST_CASE("base64 (URL-safe)", "[base64][url]") {
         REQUIRE(base64::encode(std::string("foob")) == "Zm9vYg==");
         REQUIRE(base64::encode(std::string("fooba")) == "Zm9vYmE=");
         REQUIRE(base64::encode(std::string("foobar")) == "Zm9vYmFy");
+
+        // Other test strings.
+        REQUIRE(base64::encode(std::string("123")) == "MTIz");
+        REQUIRE(base64::encode(std::string("ABC")) == "QUJD");
+        REQUIRE(base64::encode(std::string("\xFF\xFF\xFF")) == "____");
     }
 
     SECTION("decoding data") {
@@ -540,15 +562,216 @@ TEST_CASE("base64 (URL-safe)", "[base64][url]") {
         REQUIRE(base64::decode<std::string>("Zm9vYmE=") == "fooba");
         REQUIRE(base64::decode<std::string>("Zm9vYmFy") == "foobar");
 
+        // Other test strings.
+        REQUIRE(base64::decode<std::string>("MTIz") == "123");
+        REQUIRE(base64::decode<std::string>("QUJD") == "ABC");
+        REQUIRE(base64::decode("____") == std::vector<uint8_t>({255, 255, 255}));
+
         // An invalid number of symbols should throw the right kind of parse_error.
         REQUIRE_THROWS_AS(base64::decode("A"), cppcodec::padding_error&);
         REQUIRE_THROWS_AS(base64::decode("AA"), cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("ABCDE"), cppcodec::padding_error&);
         REQUIRE_THROWS_AS(base64::decode("A==="), cppcodec::invalid_input_length&);
         REQUIRE_THROWS_AS(base64::decode("AAAA===="), cppcodec::invalid_input_length&);
         REQUIRE_THROWS_AS(base64::decode("AAAAA==="), cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
+        REQUIRE_THROWS_AS(base64::decode("A&B="), cppcodec::symbol_error&);
         REQUIRE_THROWS_AS(base64::decode("++"), cppcodec::symbol_error&); // this is not standard base64
         REQUIRE_THROWS_AS(base64::decode("//"), cppcodec::symbol_error&); // ...ditto
+    }
+}
+
+TEST_CASE("hex (lowercase)", "[hex][lower]") {
+    using hex = cppcodec::hex_lower;
+
+    SECTION("encoded size calculation") {
+        REQUIRE(hex::encoded_size(0) == 0);
+        REQUIRE(hex::encoded_size(1) == 2);
+        REQUIRE(hex::encoded_size(2) == 4);
+        REQUIRE(hex::encoded_size(3) == 6);
+        REQUIRE(hex::encoded_size(4) == 8);
+        REQUIRE(hex::encoded_size(5) == 10);
+        REQUIRE(hex::encoded_size(6) == 12);
+        REQUIRE(hex::encoded_size(8) == 16);
+        REQUIRE(hex::encoded_size(10) == 20);
+    }
+
+    SECTION("maximum decoded size calculation") {
+        REQUIRE(hex::decoded_max_size(0) == 0);
+        REQUIRE(hex::decoded_max_size(1) == 0);
+        REQUIRE(hex::decoded_max_size(2) == 1);
+        REQUIRE(hex::decoded_max_size(3) == 1);
+        REQUIRE(hex::decoded_max_size(4) == 2);
+        REQUIRE(hex::decoded_max_size(5) == 2);
+        REQUIRE(hex::decoded_max_size(6) == 3);
+        REQUIRE(hex::decoded_max_size(7) == 3);
+        REQUIRE(hex::decoded_max_size(8) == 4);
+        REQUIRE(hex::decoded_max_size(9) == 4);
+        REQUIRE(hex::decoded_max_size(10) == 5);
+        REQUIRE(hex::decoded_max_size(16) == 8);
+        REQUIRE(hex::decoded_max_size(20) == 10);
+    }
+
+    SECTION("encoding data") {
+        REQUIRE(hex::encode(std::vector<uint8_t>()) == "");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0})) == "00");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0})) == "0000");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0, 0})) == "000000");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0, 0, 0})) == "00000000");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0, 0, 0, 0})) == "0000000000");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0, 0, 0, 0, 0})) == "000000000000");
+
+        // Constructing an std::string reduces the size of the char array by one (null terminator).
+        // Therefore, the result for passing the string literal directly ends up encoding
+        // one more character, which produces two more symbols in this particular case.
+        REQUIRE(hex::encode(std::string("1")) == "31");
+        REQUIRE(hex::encode("1") == "3100");
+
+        REQUIRE(hex::encode(std::string("A")) == "41");
+        REQUIRE(hex::encode(std::vector<uint8_t>({255})) == "ff");
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(hex::encode(std::string("")) == "");
+        REQUIRE(hex::encode(std::string("f")) == "66");
+        REQUIRE(hex::encode(std::string("fo")) == "666f");
+        REQUIRE(hex::encode(std::string("foo")) == "666f6f");
+        REQUIRE(hex::encode(std::string("foob")) == "666f6f62");
+        REQUIRE(hex::encode(std::string("fooba")) == "666f6f6261");
+        REQUIRE(hex::encode(std::string("foobar")) == "666f6f626172");
+    }
+
+    SECTION("decoding data") {
+        REQUIRE(hex::decode("") == std::vector<uint8_t>());
+        REQUIRE(hex::decode("00") == std::vector<uint8_t>({0}));
+        REQUIRE(hex::decode("0000") == std::vector<uint8_t>({0, 0}));
+        REQUIRE(hex::decode("000000") == std::vector<uint8_t>({0, 0, 0}));
+        REQUIRE(hex::decode("00000000") == std::vector<uint8_t>({0, 0, 0, 0}));
+        REQUIRE(hex::decode("0000000000") == std::vector<uint8_t>({0, 0, 0, 0, 0}));
+        REQUIRE(hex::decode("000000000000") == std::vector<uint8_t>({0, 0, 0, 0, 0, 0}));
+
+        // For decoding data, the result should be the same whether or not there is
+        // a null terminator at the end, because the input is a string (not binary array).
+        REQUIRE(hex::decode<std::string>(std::string("31")) == "1");
+        REQUIRE(hex::decode<std::string>("31") == "1");
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(hex::decode<std::string>("") == "");
+        REQUIRE(hex::decode<std::string>("66") == "f");
+        REQUIRE(hex::decode<std::string>("666f") == "fo");
+        REQUIRE(hex::decode<std::string>("666f6f") == "foo");
+        REQUIRE(hex::decode<std::string>("666f6f62") == "foob");
+        REQUIRE(hex::decode<std::string>("666f6f6261") == "fooba");
+        REQUIRE(hex::decode<std::string>("666f6f626172") == "foobar");
+
+        // Uppercase should decode just as well as lowercase.
+        REQUIRE(hex::decode<std::string>("666F6F6261") == "fooba");
+        REQUIRE(hex::decode<std::string>("666F6f6261") == "fooba");
+
+        // An invalid number of symbols should throw the right kind of parse_error.
+        REQUIRE_THROWS_AS(hex::decode("0"), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(hex::decode("000"), cppcodec::invalid_input_length&);
+
+        // An invalid symbol should throw a symbol error.
+        REQUIRE_THROWS_AS(hex::decode("1g"), cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(hex::decode("66 6f"), cppcodec::symbol_error&); // no spaces
+        REQUIRE_THROWS_AS(hex::decode("66-6f"), cppcodec::symbol_error&); // no dashes
+    }
+}
+
+TEST_CASE("hex (uppercase)", "[hex][upper]") {
+    using hex = cppcodec::hex_upper;
+
+    SECTION("encoded size calculation") {
+        REQUIRE(hex::encoded_size(0) == 0);
+        REQUIRE(hex::encoded_size(1) == 2);
+        REQUIRE(hex::encoded_size(2) == 4);
+        REQUIRE(hex::encoded_size(3) == 6);
+        REQUIRE(hex::encoded_size(4) == 8);
+        REQUIRE(hex::encoded_size(5) == 10);
+        REQUIRE(hex::encoded_size(6) == 12);
+        REQUIRE(hex::encoded_size(8) == 16);
+        REQUIRE(hex::encoded_size(10) == 20);
+    }
+
+    SECTION("maximum decoded size calculation") {
+        REQUIRE(hex::decoded_max_size(0) == 0);
+        REQUIRE(hex::decoded_max_size(1) == 0);
+        REQUIRE(hex::decoded_max_size(2) == 1);
+        REQUIRE(hex::decoded_max_size(3) == 1);
+        REQUIRE(hex::decoded_max_size(4) == 2);
+        REQUIRE(hex::decoded_max_size(5) == 2);
+        REQUIRE(hex::decoded_max_size(6) == 3);
+        REQUIRE(hex::decoded_max_size(7) == 3);
+        REQUIRE(hex::decoded_max_size(8) == 4);
+        REQUIRE(hex::decoded_max_size(9) == 4);
+        REQUIRE(hex::decoded_max_size(10) == 5);
+        REQUIRE(hex::decoded_max_size(16) == 8);
+        REQUIRE(hex::decoded_max_size(20) == 10);
+    }
+
+    SECTION("encoding data") {
+        REQUIRE(hex::encode(std::vector<uint8_t>()) == "");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0})) == "00");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0})) == "0000");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0, 0})) == "000000");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0, 0, 0})) == "00000000");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0, 0, 0, 0})) == "0000000000");
+        REQUIRE(hex::encode(std::vector<uint8_t>({0, 0, 0, 0, 0, 0})) == "000000000000");
+
+        // Constructing an std::string reduces the size of the char array by one (null terminator).
+        // Therefore, the result for passing the string literal directly ends up encoding
+        // one more character, which produces two more symbols in this particular case.
+        REQUIRE(hex::encode(std::string("1")) == "31");
+        REQUIRE(hex::encode("1") == "3100");
+
+        REQUIRE(hex::encode(std::string("A")) == "41");
+        REQUIRE(hex::encode(std::vector<uint8_t>({255})) == "FF");
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(hex::encode(std::string("")) == "");
+        REQUIRE(hex::encode(std::string("f")) == "66");
+        REQUIRE(hex::encode(std::string("fo")) == "666F");
+        REQUIRE(hex::encode(std::string("foo")) == "666F6F");
+        REQUIRE(hex::encode(std::string("foob")) == "666F6F62");
+        REQUIRE(hex::encode(std::string("fooba")) == "666F6F6261");
+        REQUIRE(hex::encode(std::string("foobar")) == "666F6F626172");
+    }
+
+    SECTION("decoding data") {
+        REQUIRE(hex::decode("") == std::vector<uint8_t>());
+        REQUIRE(hex::decode("00") == std::vector<uint8_t>({0}));
+        REQUIRE(hex::decode("0000") == std::vector<uint8_t>({0, 0}));
+        REQUIRE(hex::decode("000000") == std::vector<uint8_t>({0, 0, 0}));
+        REQUIRE(hex::decode("00000000") == std::vector<uint8_t>({0, 0, 0, 0}));
+        REQUIRE(hex::decode("0000000000") == std::vector<uint8_t>({0, 0, 0, 0, 0}));
+        REQUIRE(hex::decode("000000000000") == std::vector<uint8_t>({0, 0, 0, 0, 0, 0}));
+
+        // For decoding data, the result should be the same whether or not there is
+        // a null terminator at the end, because the input is a string (not binary array).
+        REQUIRE(hex::decode<std::string>(std::string("31")) == "1");
+        REQUIRE(hex::decode<std::string>("31") == "1");
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(hex::decode<std::string>("") == "");
+        REQUIRE(hex::decode<std::string>("66") == "f");
+        REQUIRE(hex::decode<std::string>("666F") == "fo");
+        REQUIRE(hex::decode<std::string>("666F6F") == "foo");
+        REQUIRE(hex::decode<std::string>("666F6F62") == "foob");
+        REQUIRE(hex::decode<std::string>("666F6F6261") == "fooba");
+        REQUIRE(hex::decode<std::string>("666F6F626172") == "foobar");
+
+        // Lowercase should decode just as well as uppercase.
+        REQUIRE(hex::decode<std::string>("666f6f6261") == "fooba");
+        REQUIRE(hex::decode<std::string>("666f6F6261") == "fooba");
+
+        // An invalid number of symbols should throw the right kind of parse_error.
+        REQUIRE_THROWS_AS(hex::decode("0"), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(hex::decode("000"), cppcodec::invalid_input_length&);
+
+        // An invalid symbol should throw a symbol error.
+        REQUIRE_THROWS_AS(hex::decode("1G"), cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(hex::decode("66 6F"), cppcodec::symbol_error&); // no spaces
+        REQUIRE_THROWS_AS(hex::decode("66-6F"), cppcodec::symbol_error&); // no dashes
     }
 }
