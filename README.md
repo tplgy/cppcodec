@@ -1,5 +1,7 @@
 # cppcodec
 
+[![Build Status](https://travis-ci.org/tplgy/cppcodec.png)](https://travis-ci.org/tplgy/cppcodec)
+
 Header-only C++11 library to encode/decode base64 (standard, URL-safe),
 base32 (RFC 4648, Crockford) and hex (a.k.a. base16). MIT licensed with
 consistent, flexible API. Supports raw pointers, `std::string` and
