@@ -43,20 +43,13 @@ Here are a number of things I'd like to do still:
 * More codec variants:
   * binary - useful for debugging
   * octal
-  * base32:
-    * base32hex from RFC 4648. Easy, is just copy-and-paste
-      from `base32_rfc4648` to `base32_hex` with a different alphabet.
-    * z-base32 might be interesting (and has some funky marginal-space-savings
-      options if your input length isn't octets), but doesn't appear any more
-      popular than Crockford base32. Pretty far down on the list.
-  * base64:
-    * PEM (RFC 1421), MIME (RFC 2045) and UTF-7 (RFC 2152) variants
-      since they're popular and less strict than RFC 4648. Requires more
-      sophisticated generation of whitespace and ideally also checks whether
-      the whitespace is correctly located in the input string.
-    * Unpadded base64url from RFC 6920, and/or the variants for
-      XML names/identifiers, because unpadded is the shortest possible.
-  * Ascii85/z85: has its uses and might work well within the cppcodec framework.
+  * z-base32 might be interesting (and has some funky marginal-space-savings
+    options if your input length isn't octets), but doesn't appear any more
+    popular than Crockford base32. Pretty far down on the list.
+  * base64 variants from PEM (RFC 1421), MIME (RFC 2045) and UTF-7 (RFC 2152)
+    since they're popular and less strict than RFC 4648. Requires more
+    sophisticated generation of whitespace and ideally also checks whether
+    the whitespace is correctly located in the input string.
   * Proquints? I'm not quite sure about how useful those are in real life.
 
 * Checksums: Crockford base32 and RFC 6920 unpadded base64url define optional
