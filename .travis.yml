@@ -1,0 +1,88 @@
+language: cpp
+
+# sources  list: https://github.com/travis-ci/apt-source-whitelist/blob/master/ubuntu.json,
+# packages list: https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
+          packages: [ 'g++-4.8', 'libstdc++-4.8-dev', 'cmake' ]
+      env: CMAKE_BUILD_TYPE=DEBUG GXX=4.8
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
+          packages: [ 'g++-4.8', 'libstdc++-4.8-dev', 'cmake' ]
+      env: CMAKE_BUILD_TYPE=RELEASE GXX=4.8
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
+          packages: [ 'g++-4.9', 'libstdc++-4.9-dev', 'cmake' ]
+      env: CMAKE_BUILD_TYPE=DEBUG GXX=4.9
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
+          packages: [ 'g++-4.9', 'libstdc++-4.9-dev', 'cmake' ]
+      env: CMAKE_BUILD_TYPE=RELEASE GXX=4.9
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
+          packages: [ 'g++-5', 'libstdc++-5-dev', 'cmake' ]
+      env: CMAKE_BUILD_TYPE=DEBUG GXX=5
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
+          packages: [ 'g++-5', 'libstdc++-5-dev', 'cmake' ]
+      env: CMAKE_BUILD_TYPE=RELEASE GXX=5
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
+          packages: [ 'libstdc++-4.8-dev', 'cmake' ]
+      env: CMAKE_BUILD_TYPE=DEBUG
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
+          packages: [ 'libstdc++-4.8-dev', 'cmake' ]
+      env: CMAKE_BUILD_TYPE=RELEASE
+
+# container-based builds
+sudo: false
+
+before_install:
+  - env
+  - export SRC_DIR="`pwd`"
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-$GXX" CC="gcc-$GXX"; fi
+
+script:
+  - $CXX --version
+  - cmake --version
+  - mkdir "$TRAVIS_BUILD_DIR/build"
+  - cd "$TRAVIS_BUILD_DIR/build"
+  - pwd
+  - cmake "$SRC_DIR"
+  - make
+  - CTEST_OUTPUT_ON_FAILURE=1 make test

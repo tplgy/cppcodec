@@ -37,6 +37,7 @@ add_library(cppcodec OBJECT ${PUBLIC_HEADERS}) # unnecessary for building, but m
 add_subdirectory(tool)
 
 if (build_tests)
+    enable_testing()
     add_subdirectory(test)
 endif()
 
