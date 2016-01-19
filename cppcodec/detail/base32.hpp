@@ -47,26 +47,24 @@ public:
     static inline constexpr uint8_t binary_block_size() { return 5; }
     static inline constexpr uint8_t encoded_block_size() { return 8; }
 
-    template <typename Result, typename ResultState> static void encode_block(
-            Result& encoded, ResultState&, const uint8_t* src);
+    template <typename Result, typename ResultState>
+    static void encode_block(Result& encoded, ResultState&, const uint8_t* src);
 
-    template <typename Result, typename ResultState> static void encode_tail(
-            Result& encoded, ResultState&, const uint8_t* src, size_t src_len);
+    template <typename Result, typename ResultState>
+    static void encode_tail(Result& encoded, ResultState&, const uint8_t* src, size_t src_len);
 
-    template <typename Result, typename ResultState, typename V = CodecVariant> static void pad(
-            Result& encoded, ResultState&,
-            typename std::enable_if<V::generates_padding(), size_t>::type remaining_src_len);
+    template <typename Result, typename ResultState>
+    static void pad(Result&, ResultState&, ...) { } // lower priority overload
 
-    template <typename Result, typename ResultState, typename V = CodecVariant> static void pad(
-            Result&, ResultState&, typename std::enable_if<!V::generates_padding(), size_t>::type)
-    {
-    }
+    template <typename Result, typename ResultState, typename V = CodecVariant,
+            typename std::enable_if<V::generates_padding()>::type* = nullptr>
+    static void pad(Result& encoded, ResultState&, size_t remaining_src_len);
 
-    template <typename Result, typename ResultState> static void decode_block(
-            Result& decoded, ResultState&, const uint8_t* idx);
+    template <typename Result, typename ResultState>
+    static void decode_block(Result& decoded, ResultState&, const uint8_t* idx);
 
-    template <typename Result, typename ResultState> static void decode_tail(
-            Result& decoded, ResultState&, const uint8_t* idx, size_t idx_len);
+    template <typename Result, typename ResultState>
+    static void decode_tail(Result& decoded, ResultState&, const uint8_t* idx, size_t idx_len);
 };
 
 //
@@ -123,10 +121,10 @@ inline void base32<CodecVariant>::encode_tail(
 }
 
 template <typename CodecVariant>
-template <typename Result, typename ResultState, typename V>
+template <typename Result, typename ResultState, typename V,
+        typename std::enable_if<V::generates_padding()>::type*>
 inline void base32<CodecVariant>::pad(
-        Result& encoded, ResultState& state,
-        typename std::enable_if<V::generates_padding(), size_t>::type remaining_src_len)
+        Result& encoded, ResultState& state, size_t remaining_src_len)
 {
     switch (remaining_src_len) {
     case 1: // 2 symbols, 6 padding characters
