@@ -25,8 +25,6 @@
 #define CPPCODEC_DETAIL_DATA_ACCESS
 
 #include <stdint.h> // for size_t
-#include <stdlib.h> // for abort()
-#include <type_traits> // for std::remove_{cv,pointer,reference}
 
 namespace cppcodec {
 namespace data {

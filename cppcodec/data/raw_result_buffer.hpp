@@ -24,7 +24,6 @@
 #ifndef CPPCODEC_DETAIL_RAW_RESULT_BUFFER
 #define CPPCODEC_DETAIL_RAW_RESULT_BUFFER
 
-#include <stdexcept>
 #include <stdint.h> // for size_t
 #include <stdlib.h> // for abort()
 

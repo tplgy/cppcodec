@@ -25,9 +25,35 @@
 #define CPPCODEC_PARSE_ERROR
 
 #include <stdexcept>
-#include <sstream>
+#include <string>
 
 namespace cppcodec {
+
+namespace detail {
+// <*stream> headers include a lot of code and noticeably increase compile times.
+// The only thing we want from them really is a char-to-string conversion.
+// That's easy to implement with many less lines of code, so let's do it ourselves.
+template <int N>
+static void uctoa(unsigned char n, char (&s)[N])
+{
+    static_assert(N >= 4, "need at least 4 bytes to convert an unsigned char to string safely");
+    int i = sizeof(s) - 1;
+    int num_chars = 1;
+    s[i--] = '\0';
+    do { // generate digits in reverse order
+        s[i--] = n % 10 + '0'; // get next digit
+        ++num_chars;
+    } while ((n /= 10) > 0); // delete it
+
+    if (num_chars == sizeof(s)) {
+        return;
+    }
+    for (i = 0; i < num_chars; ++i) { // move chars to front of string
+        s[i] = s[i + (sizeof(s) - num_chars)];
+    }
+}
+} // end namespace detail
+
 
 class parse_error : public std::domain_error
 {
@@ -52,9 +78,9 @@ public:
 private:
     static std::string make_error_message(char c)
     {
-        std::ostringstream o;
-        o << "parse error: character [" << static_cast<int>(c) << " '" << c << "'] out of bounds";
-        return o.str();
+        char s[4];
+        detail::uctoa(*reinterpret_cast<unsigned char*>(&c), s);
+        return std::string("parse error: character [") + &(s[0]) + " '" + c + "'] out of bounds";
     }
 
 private:

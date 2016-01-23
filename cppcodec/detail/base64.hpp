@@ -29,7 +29,7 @@
 #define CPPCODEC_DETAIL_BASE64
 
 #include <stdint.h>
-#include <type_traits>
+#include <stdlib.h> // for abort()
 
 #include "../data/access.hpp"
 #include "../parse_error.hpp"

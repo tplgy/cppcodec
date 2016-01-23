@@ -25,6 +25,7 @@
 #define CPPCODEC_DETAIL_HEX
 
 #include <stdint.h>
+#include <stdlib.h> // for abort()
 
 #include "../data/access.hpp"
 #include "../parse_error.hpp"
