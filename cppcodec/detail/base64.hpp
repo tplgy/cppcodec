@@ -28,11 +28,12 @@
 #ifndef CPPCODEC_DETAIL_BASE64
 #define CPPCODEC_DETAIL_BASE64
 
+#include <stdexcept>
 #include <stdint.h>
-#include <stdlib.h> // for abort()
 
 #include "../data/access.hpp"
 #include "../parse_error.hpp"
+#include "config.hpp"
 #include "stream_codec.hpp"
 
 namespace cppcodec {
@@ -45,18 +46,30 @@ public:
     static inline constexpr uint8_t binary_block_size() { return 3; }
     static inline constexpr uint8_t encoded_block_size() { return 4; }
 
-    template <typename Result, typename ResultState>
-    static void encode_block(Result& encoded, ResultState&, const uint8_t* src);
+    static CPPCODEC_ALWAYS_INLINE constexpr uint8_t num_encoded_tail_symbols(uint8_t num_bytes) noexcept
+    {
+        return (num_bytes == 1) ? 2    // 2 symbols, 2 padding characters
+                : (num_bytes == 2) ? 3 // 3 symbols, 1 padding character
+                : throw std::domain_error("invalid number of bytes in a tail block");
+    }
 
-    template <typename Result, typename ResultState>
-    static void encode_tail(Result& encoded, ResultState&, const uint8_t* src, size_t src_len);
+    template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index(
+            const uint8_t* b /*binary block*/) noexcept
+    {
+        return (I == 0) ? (b[0] >> 2) // first 6 bits
+                : (I == 1) ? (((b[0] & 0x3) << 4) | (b[1] >> 4))
+                : (I == 2) ? (((b[1] & 0xF) << 2) | (b[2] >> 6))
+                : (I == 3) ? (b[2] & 0x3F) // last 6 bits
+                : throw std::domain_error("invalid encoding symbol index in a block");
+    }
 
-    template <typename Result, typename ResultState>
-    static void pad(Result&, ResultState&, ...) { } // lower priority overload
-
-    template <typename Result, typename ResultState, typename V = CodecVariant,
-            typename std::enable_if<V::generates_padding()>::type* = nullptr>
-    static void pad(Result& encoded, ResultState&, size_t remaining_src_len);
+    template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index_last(
+            const uint8_t* b /*binary block*/) noexcept
+    {
+        return (I == 1) ? ((b[0] & 0x3) << 4)    // abbreviated 2nd symbol
+                : (I == 2) ? ((b[1] & 0xF) << 2) // abbreviated 3rd symbol
+                : throw std::domain_error("invalid last encoding symbol index in a tail");
+    }
 
     template <typename Result, typename ResultState>
     static void decode_block(Result& decoded, ResultState&, const uint8_t* idx);
@@ -65,52 +78,6 @@ public:
     static void decode_tail(Result& decoded, ResultState&, const uint8_t* idx, size_t idx_len);
 };
 
-
-template <typename CodecVariant>
-template <typename Result, typename ResultState>
-inline void base64<CodecVariant>::encode_block(
-    Result& encoded, ResultState& state, const uint8_t* src)
-{
-    using V = CodecVariant;
-    data::put(encoded, state, V::symbol(src[0] >> 2)); // first 6 bits
-    data::put(encoded, state, V::symbol(((src[0] & 0x3) << 4) + (src[1] >> 4))); // last 2 + next 4
-    data::put(encoded, state, V::symbol(((src[1] & 0xF) << 2) + (src[2] >> 6))); // last 4 + next 2
-    data::put(encoded, state, V::symbol(src[2] & 0x3F)); // last 6 bits
-}
-
-template <typename CodecVariant>
-template <typename Result, typename ResultState>
-inline void base64<CodecVariant>::encode_tail(
-        Result& encoded, ResultState& state, const uint8_t* src, size_t remaining_src_len)
-{
-    using V = CodecVariant;
-
-    data::put(encoded, state, V::symbol(src[0] >> 2)); // encoded size 1
-    if (remaining_src_len == 1) {
-        data::put(encoded, state, V::symbol((src[0] & 0x03) << 4)); // size 2
-        return;
-    }
-    data::put(encoded, state, V::symbol(((src[0] & 0x03) << 4) + (src[1] >> 4))); // size 2
-    if (remaining_src_len == 2) {
-        data::put(encoded, state, V::symbol((src[1] & 0x0f) << 2)); // size 3
-        return;
-    }
-    abort(); // not reached: encode_block() should be called if remaining_src_len > 2, not this function
-}
-
-template <typename CodecVariant>
-template <typename Result, typename ResultState, typename V,
-        typename std::enable_if<V::generates_padding()>::type*>
-inline void base64<CodecVariant>::pad(
-        Result& encoded, ResultState& state, size_t remaining_src_len)
-{
-    switch (remaining_src_len) {
-    case 1: // 2 symbols, 2 padding characters
-        data::put(encoded, state, CodecVariant::padding_symbol());
-    case 2: // 3 symbols, 1 padding character
-        data::put(encoded, state, CodecVariant::padding_symbol());
-    }
-}
 
 template <typename CodecVariant>
 template <typename Result, typename ResultState>

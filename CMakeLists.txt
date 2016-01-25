@@ -30,6 +30,7 @@ set(PUBLIC_HEADERS
     cppcodec/detail/base32.hpp
     cppcodec/detail/base64.hpp
     cppcodec/detail/codec.hpp
+    cppcodec/detail/config.hpp
     cppcodec/detail/hex.hpp
     cppcodec/detail/stream_codec.hpp)
 

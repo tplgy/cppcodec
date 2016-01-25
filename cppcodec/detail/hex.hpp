@@ -66,14 +66,24 @@ public:
     static inline constexpr uint8_t binary_block_size() { return 1; }
     static inline constexpr uint8_t encoded_block_size() { return 2; }
 
-    template <typename Result, typename ResultState>
-    static void encode_block(Result& encoded, ResultState&, const uint8_t* src);
+    static CPPCODEC_ALWAYS_INLINE constexpr uint8_t num_encoded_tail_symbols(uint8_t /*num_bytes*/) noexcept
+    {
+        return true ? 0 : throw std::domain_error("no tails in hex encoding, should never be called");
+    }
 
-    template <typename Result, typename ResultState>
-    static void encode_tail(Result& encoded, ResultState&, const uint8_t* src, size_t src_len);
+    template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index(
+            const uint8_t* b /*binary block*/) noexcept
+    {
+        return (I == 0) ? (b[0] >> 4) // first 4 bits
+                : (I == 1) ? (b[0] & 0xF) // last 4 bits
+                : throw std::domain_error("invalid encoding symbol index in a block");
+    }
 
-    template <typename Result, typename ResultState>
-    static void pad(Result&, ResultState&, size_t) { }
+        template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index_last(
+                const uint8_t* b /*binary block*/) noexcept
+    {
+        return true ? 0 : throw std::domain_error("invalid last encoding symbol index in a tail");
+    }
 
     template <typename Result, typename ResultState>
     static void decode_block(Result& decoded, ResultState&, const uint8_t* idx);
@@ -82,26 +92,6 @@ public:
     static void decode_tail(Result& decoded, ResultState&, const uint8_t* idx, size_t idx_len);
 };
 
-
-template <typename CodecVariant>
-template <typename Result, typename ResultState>
-inline void hex<CodecVariant>::encode_block(Result& encoded, ResultState& state, const uint8_t* src)
-{
-    using V = CodecVariant;
-    data::put(encoded, state, V::symbol(src[0] >> 4)); // first 4 bits
-    data::put(encoded, state, V::symbol(src[0] & 0xF)); // last 4 bits
-}
-
-template <typename CodecVariant>
-template <typename Result, typename ResultState>
-inline void hex<CodecVariant>::encode_tail(Result&, ResultState&, const uint8_t*, size_t)
-{
-    // Octet-streaming hex always expands to two symbols per input byte.
-    // In order to decode odd-length hex numbers such as 0xF, 0x1a5, etc.,
-    // we'll want a place-based single number codec rather than a stream codec.
-    // That's a different beast and requires an encode_head(), rather than encode_tail().
-    abort();
-}
 
 template <typename CodecVariant>
 template <typename Result, typename ResultState>
