@@ -25,6 +25,7 @@
 #include "catch/single_include/catch.hpp"
 
 #include <cppcodec/base32_crockford.hpp>
+#include <cppcodec/base32_hex.hpp>
 #include <cppcodec/base32_rfc4648.hpp>
 #include <cppcodec/base64_rfc4648.hpp>
 #include <cppcodec/base64_url.hpp>
@@ -234,6 +235,111 @@ TEST_CASE("Douglas Crockford's base32", "[base32][crockford]") {
     }
 }
 
+TEST_CASE("base32hex", "[base32][hex]") {
+    using base32 = cppcodec::base32_hex;
+
+    SECTION("encoded size calculation") {
+        REQUIRE(base32::encoded_size(0) == 0);
+        REQUIRE(base32::encoded_size(1) == 8);
+        REQUIRE(base32::encoded_size(2) == 8);
+        REQUIRE(base32::encoded_size(3) == 8);
+        REQUIRE(base32::encoded_size(4) == 8);
+        REQUIRE(base32::encoded_size(5) == 8);
+        REQUIRE(base32::encoded_size(6) == 16);
+        REQUIRE(base32::encoded_size(10) == 16);
+    }
+
+    SECTION("maximum decoded size calculation") {
+        REQUIRE(base32::decoded_max_size(0) == 0);
+        REQUIRE(base32::decoded_max_size(1) == 0);
+        REQUIRE(base32::decoded_max_size(2) == 0);
+        REQUIRE(base32::decoded_max_size(3) == 0);
+        REQUIRE(base32::decoded_max_size(4) == 0);
+        REQUIRE(base32::decoded_max_size(5) == 0);
+        REQUIRE(base32::decoded_max_size(6) == 0);
+        REQUIRE(base32::decoded_max_size(7) == 0);
+        REQUIRE(base32::decoded_max_size(8) == 5);
+        REQUIRE(base32::decoded_max_size(9) == 5);
+        REQUIRE(base32::decoded_max_size(10) == 5);
+        REQUIRE(base32::decoded_max_size(16) == 10);
+    }
+
+    SECTION("encoding data") {
+        REQUIRE(base32::encode(std::vector<uint8_t>()) == "");
+        REQUIRE(base32::encode(std::vector<uint8_t>({0})) == "00======");
+        REQUIRE(base32::encode(std::vector<uint8_t>({0, 0})) == "0000====");
+        REQUIRE(base32::encode(std::vector<uint8_t>({0, 0, 0})) == "00000===");
+        REQUIRE(base32::encode(std::vector<uint8_t>({0, 0, 0, 0})) == "0000000=");
+        REQUIRE(base32::encode(std::vector<uint8_t>({0, 0, 0, 0, 0})) == "00000000");
+        REQUIRE(base32::encode(std::vector<uint8_t>({0, 0, 0, 0, 0, 0})) == "0000000000======");
+
+        // Constructing an std::string reduces the size of the char array by one (null terminator).
+        // Therefore, the result for passing the string literal directly ends up encoding
+        // one more character, which produces two more symbols in this particular case.
+        REQUIRE(base32::encode(std::string("Hello")) == "91IMOR3F");
+        REQUIRE(base32::encode("Hello") == "91IMOR3F00======");
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(base32::encode(std::string("")) == "");
+        REQUIRE(base32::encode(std::string("f")) == "CO======");
+        REQUIRE(base32::encode(std::string("fo")) == "CPNG====");
+        REQUIRE(base32::encode(std::string("foo")) == "CPNMU===");
+        REQUIRE(base32::encode(std::string("foob")) == "CPNMUOG=");
+        REQUIRE(base32::encode(std::string("fooba")) == "CPNMUOJ1");
+        REQUIRE(base32::encode(std::string("foobar")) == "CPNMUOJ1E8======");
+
+        // Other test strings.
+        REQUIRE(base32::encode(std::vector<uint8_t>({255, 255, 255, 255, 255})) == "VVVVVVVV");
+    }
+
+    SECTION("decoding data") {
+        REQUIRE(base32::decode("") == std::vector<uint8_t>());
+        REQUIRE(base32::decode("00======") == std::vector<uint8_t>({0}));
+        REQUIRE(base32::decode("0000====") == std::vector<uint8_t>({0, 0}));
+        REQUIRE(base32::decode("00000===") == std::vector<uint8_t>({0, 0, 0}));
+        REQUIRE(base32::decode("0000000=") == std::vector<uint8_t>({0, 0, 0, 0}));
+        REQUIRE(base32::decode("00000000") == std::vector<uint8_t>({0, 0, 0, 0, 0}));
+        REQUIRE(base32::decode("0000000000======") == std::vector<uint8_t>({0, 0, 0, 0, 0, 0}));
+
+        // For decoding data, the result should be the same whether or not there is
+        // a null terminator at the end, because the input is a string (not binary array).
+        REQUIRE(base32::decode<std::string>(std::string("91IMOR3F")) == "Hello");
+        REQUIRE(base32::decode<std::string>("91IMOR3F") == "Hello");
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(base32::decode<std::string>("") == "");
+        REQUIRE(base32::decode<std::string>("CO======") == "f");
+        REQUIRE(base32::decode<std::string>("CPNG====") == "fo");
+        REQUIRE(base32::decode<std::string>("CPNMU===") == "foo");
+        REQUIRE(base32::decode<std::string>("CPNMUOG=") == "foob");
+        REQUIRE(base32::decode<std::string>("CPNMUOJ1") == "fooba");
+        REQUIRE(base32::decode<std::string>("CPNMUOJ1E8======") == "foobar");
+
+        // Other test strings.
+        REQUIRE(base32::decode("VVVVVVVV") == std::vector<uint8_t>({255, 255, 255, 255, 255}));
+
+        // Lowercase should decode just as well as uppercase.
+        REQUIRE(base32::decode<std::string>("cpnmuoj1") == "fooba");
+        REQUIRE(base32::decode<std::string>("cPnMuOj1") == "fooba");
+
+        // An invalid number of symbols should throw the right kind of parse_error.
+        REQUIRE_THROWS_AS(base32::decode("0"), cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base32::decode("00"), cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base32::decode("00==="), cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base32::decode("0======="), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000====="), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000000=="), cppcodec::invalid_input_length&);
+
+        // An invalid symbol should throw a symbol error.
+        REQUIRE_THROWS_AS(base32::decode("W0======"), cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("X0======"), cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("Y0======"), cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("Z0======"), cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("CPNM UOJ1"), cppcodec::symbol_error&); // no spaces
+        REQUIRE_THROWS_AS(base32::decode("CPNM-UOJ1"), cppcodec::symbol_error&); // no dashes
+    }
+}
+
 TEST_CASE("base32 (RFC 4648)", "[base32][rfc4648]") {
     using base32 = cppcodec::base32_rfc4648;
 
@@ -320,7 +426,7 @@ TEST_CASE("base32 (RFC 4648)", "[base32][rfc4648]") {
         REQUIRE(base32::decode("77777777") == std::vector<uint8_t>({255, 255, 255, 255, 255}));
 
         // Lowercase should decode just as well as uppercase.
-        REQUIRE(base32::decode<std::string>("mzxw6yTb") == "fooba");
+        REQUIRE(base32::decode<std::string>("mzxw6ytb") == "fooba");
         REQUIRE(base32::decode<std::string>("mZxW6yTb") == "fooba");
 
         // An invalid number of symbols should throw the right kind of parse_error.

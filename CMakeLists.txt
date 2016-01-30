@@ -11,7 +11,9 @@ set(PUBLIC_HEADERS
     # base32
     cppcodec/base32_crockford.hpp
     cppcodec/base32_default_crockford.hpp
+    cppcodec/base32_default_hex.hpp
     cppcodec/base32_default_rfc4648.hpp
+    cppcodec/base32_hex.hpp
     cppcodec/base32_rfc4648.hpp
     # base64
     cppcodec/base64_default_rfc4648.hpp
