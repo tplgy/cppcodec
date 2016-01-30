@@ -2,10 +2,11 @@
 
 [![Build Status](https://travis-ci.org/tplgy/cppcodec.png)](https://travis-ci.org/tplgy/cppcodec)
 
-Header-only C++11 library to encode/decode base64 (standard, URL-safe),
-base32 (RFC 4648, Crockford) and hex (a.k.a. base16). MIT licensed with
-consistent, flexible API. Supports raw pointers, `std::string` and
-(templated) character vectors without unnecessary allocations.
+Header-only C++11 library to encode/decode base64, base64url, base32, base32hex
+and hex (a.k.a. base16) as specified in RFC 4648, plus Crockford's base32.
+
+MIT licensed with consistent, flexible API. Supports raw pointers,
+`std::string` and (templated) character vectors without unnecessary allocations.
 
 
 
@@ -88,6 +89,13 @@ communicated via phone.
   picks the streaming interpretation and thus zero-pads on the right. (See
   http://merrigrove.blogspot.ca/2014/04/what-heck-is-base64-encoding-really.html
   for a detailed discussion of the issue.)
+* `base32_hex` is the logical extension of the hexadecimal alphabet, and also
+  specified in RFC 4648. It uses the digit characters 0-9 for the first 10 values
+  and the upper-case letters A-V for the remaining ones. The alphabet is
+  conceptually simple, but contains all of the ambiguous number/letter pairs that
+  the other variants try to avoid. It is also less suitable for verbal
+  transmission. Padding with '=' is required and makes the encoded string a
+  multiple of 8 characters.
 
 ### hex
 
