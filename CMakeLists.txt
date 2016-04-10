@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 project(cppcodec)
 
 option(build_tests "Build tests (run as 'test' target)" ON)
@@ -36,7 +36,7 @@ set(PUBLIC_HEADERS
     cppcodec/detail/hex.hpp
     cppcodec/detail/stream_codec.hpp)
 
-add_library(cppcodec OBJECT ${PUBLIC_HEADERS}) # unnecessary for building, but makes headers show up in IDEs
+add_library(cppcodec INTERFACE)
 add_subdirectory(tool)
 
 if (build_tests)
