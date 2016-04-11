@@ -9,64 +9,64 @@ matrix:
       compiler: gcc
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-4.8', 'libstdc++-4.8-dev', 'cmake' ]
+          sources: [ 'george-edison55-precise-backports', 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.8', 'libstdc++-4.8-dev', 'cmake', 'cmake-data' ]
       env: CMAKE_BUILD_TYPE=DEBUG GXX=4.8
 
     - os: linux
       compiler: gcc
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-4.8', 'libstdc++-4.8-dev', 'cmake' ]
+          sources: [ 'george-edison55-precise-backports', 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.8', 'libstdc++-4.8-dev', 'cmake', 'cmake-data' ]
       env: CMAKE_BUILD_TYPE=RELEASE GXX=4.8
 
     - os: linux
       compiler: gcc
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-4.9', 'libstdc++-4.9-dev', 'cmake' ]
+          sources: [ 'george-edison55-precise-backports', 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.9', 'libstdc++-4.9-dev', 'cmake', 'cmake-data' ]
       env: CMAKE_BUILD_TYPE=DEBUG GXX=4.9
 
     - os: linux
       compiler: gcc
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-4.9', 'libstdc++-4.9-dev', 'cmake' ]
+          sources: [ 'george-edison55-precise-backports', 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.9', 'libstdc++-4.9-dev', 'cmake', 'cmake-data' ]
       env: CMAKE_BUILD_TYPE=RELEASE GXX=4.9
 
     - os: linux
       compiler: gcc
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-5', 'libstdc++-5-dev', 'cmake' ]
+          sources: [ 'george-edison55-precise-backports', 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-5', 'libstdc++-5-dev', 'cmake', 'cmake-data' ]
       env: CMAKE_BUILD_TYPE=DEBUG GXX=5
 
     - os: linux
       compiler: gcc
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-5', 'libstdc++-5-dev', 'cmake' ]
+          sources: [ 'george-edison55-precise-backports', 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-5', 'libstdc++-5-dev', 'cmake', 'cmake-data' ]
       env: CMAKE_BUILD_TYPE=RELEASE GXX=5
 
     - os: linux
       compiler: clang
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'libstdc++-4.8-dev', 'cmake' ]
+          sources: [ 'george-edison55-precise-backports', 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.8-dev', 'cmake', 'cmake-data' ]
       env: CMAKE_BUILD_TYPE=DEBUG
 
     - os: linux
       compiler: clang
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'libstdc++-4.8-dev', 'cmake' ]
+          sources: [ 'george-edison55-precise-backports', 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.8-dev', 'cmake', 'cmake-data' ]
       env: CMAKE_BUILD_TYPE=RELEASE
 
 # container-based builds
