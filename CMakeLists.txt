@@ -37,6 +37,7 @@ set(PUBLIC_HEADERS
     cppcodec/detail/stream_codec.hpp)
 
 add_library(cppcodec OBJECT ${PUBLIC_HEADERS}) # unnecessary for building, but makes headers show up in IDEs
+set_target_properties(cppcodec PROPERTIES LINKER_LANGUAGE CXX)
 add_subdirectory(tool)
 
 if (build_tests)
