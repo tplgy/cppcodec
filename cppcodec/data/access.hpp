@@ -131,7 +131,7 @@ public:
     {
         result.resize(m_offset);
     }
-    inline void size(const Result&)
+    inline size_t size(const Result&)
     {
         return m_offset;
     }
