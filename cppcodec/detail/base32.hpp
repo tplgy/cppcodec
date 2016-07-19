@@ -48,7 +48,7 @@ public:
     static inline constexpr uint8_t binary_block_size() { return 5; }
     static inline constexpr uint8_t encoded_block_size() { return 8; }
 
-    static CPPCODEC_ALWAYS_INLINE constexpr uint8_t num_encoded_tail_symbols(uint8_t num_bytes) noexcept
+    static CPPCODEC_ALWAYS_INLINE constexpr uint8_t num_encoded_tail_symbols(uint8_t num_bytes)
     {
         return (num_bytes == 1) ? 2    // 2 symbols, 6 padding characters
                 : (num_bytes == 2) ? 4 // 4 symbols, 4 padding characters
@@ -58,7 +58,7 @@ public:
     }
 
     template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index(
-            const uint8_t* b /*binary block*/) noexcept
+            const uint8_t* b /*binary block*/)
     {
         return (I == 0) ? ((b[0] >> 3) & 0x1F) // first 5 bits
                 : (I == 1) ? (((b[0] << 2) & 0x1C) | ((b[1] >> 6) & 0x3))
@@ -72,7 +72,7 @@ public:
     }
 
     template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index_last(
-            const uint8_t* b /*binary block*/) noexcept
+            const uint8_t* b /*binary block*/)
     {
         return (I == 1) ? ((b[0] << 2) & 0x1C)    // abbreviated 2nd symbol
                 : (I == 3) ? ((b[1] << 4) & 0x10) // abbreviated 4th symbol
