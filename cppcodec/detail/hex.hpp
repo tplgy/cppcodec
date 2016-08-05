@@ -97,7 +97,7 @@ template <typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void hex<CodecVariant>::decode_block(Result& decoded, ResultState& state, const uint8_t* idx)
 {
-    data::put(decoded, state, (uint8_t)((idx[0] << 4) | idx[1]));
+    data::put(decoded, state, static_cast<uint8_t>((idx[0] << 4) | idx[1]));
 }
 
 template <typename CodecVariant>

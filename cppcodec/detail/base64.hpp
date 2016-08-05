@@ -84,9 +84,9 @@ template <typename Result, typename ResultState>
 inline void base64<CodecVariant>::decode_block(
         Result& decoded, ResultState& state, const uint8_t* idx)
 {
-    data::put(decoded, state, (uint8_t)((idx[0] << 2) + ((idx[1] & 0x30) >> 4)));
-    data::put(decoded, state, (uint8_t)(((idx[1] & 0xF) << 4) + ((idx[2] & 0x3C) >> 2)));
-    data::put(decoded, state, (uint8_t)(((idx[2] & 0x3) << 6) + idx[3]));
+    data::put(decoded, state, static_cast<uint8_t>((idx[0] << 2) + ((idx[1] & 0x30) >> 4)));
+    data::put(decoded, state, static_cast<uint8_t>(((idx[1] & 0xF) << 4) + ((idx[2] & 0x3C) >> 2)));
+    data::put(decoded, state, static_cast<uint8_t>(((idx[2] & 0x3) << 6) + idx[3]));
 }
 
 template <typename CodecVariant>
@@ -100,13 +100,13 @@ inline void base64<CodecVariant>::decode_tail(
     }
 
     // idx_len == 2: decoded size 1
-    data::put(decoded, state, (uint8_t)((idx[0] << 2) + ((idx[1] & 0x30) >> 4)));
+    data::put(decoded, state, static_cast<uint8_t>((idx[0] << 2) + ((idx[1] & 0x30) >> 4)));
     if (idx_len == 2) {
         return;
     }
 
     // idx_len == 3: decoded size 2
-    data::put(decoded, state, (uint8_t)(((idx[1] & 0xF) << 4) + ((idx[2] & 0x3C) >> 2)));
+    data::put(decoded, state, static_cast<uint8_t>(((idx[1] & 0xF) << 4) + ((idx[2] & 0x3C) >> 2)));
 }
 
 } // namespace detail
