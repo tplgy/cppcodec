@@ -141,7 +141,7 @@ inline void stream_codec<Codec, CodecVariant>::encode(
             abort();
             return;
         }
-        auto num_symbols = Codec::num_encoded_tail_symbols(remaining_src_len);
+        auto num_symbols = Codec::num_encoded_tail_symbols(static_cast<uint8_t>(remaining_src_len));
         encoder::template tail<Codec, CodecVariant>(encoded_result, state, src, num_symbols);
     }
 }
