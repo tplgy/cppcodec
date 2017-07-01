@@ -1,0 +1,60 @@
+version: '{build}'
+
+branches:
+  only:
+  - master
+
+clone_depth: 1
+
+os:
+  - Visual Studio 2015
+  - Visual Studio 2017
+
+# Win32 and x64 are CMake-compatible solution platform names.
+# This allows us to pass %PLATFORM% to cmake -A.
+platform:
+  - Win32
+  - x64
+
+# Build configurations, for MSBuild as well as ctest.
+configuration:
+  - Debug
+  - Release
+  - MinSizeRel
+
+matrix:
+  exclude:
+  - os: Visual Studio 2017
+    platform: x64
+    configuration: Debug
+  - os: Visual Studio 2015
+    platform: Win32
+    configuration: Debug
+  - os: Visual Studio 2017
+    configuration: Release
+  - platform: Win32
+    configuration: Release
+
+install:
+  - set SRC_DIR=%CD%
+  - cmake --version
+  - git submodule sync --recursive
+  - git submodule update --init --recursive
+  - md build
+  - cd build
+  - set BUILD_DIR=%CD%
+
+before_build:
+  - cd %BUILD_DIR%
+  - cmake -A%PLATFORM% %SRC_DIR%
+
+# build with MSBuild
+build:
+  project: build/cppcodec.sln
+  parallel: true
+  verbosity: normal
+
+test_script:
+  - cd %BUILD_DIR%
+  - set CTEST_OUTPUT_ON_FAILURE=1
+  - ctest -C %CONFIGURATION% -VV

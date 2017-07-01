@@ -5,7 +5,11 @@ option(build_tests "Build tests (run as 'test' target)" ON)
 
 # These flags are for binaries built by this particular CMake project (test_cppcodec, base64enc, etc.).
 # In your own project that uses cppcodec, you might want to specify a different standard or error level.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic")
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic")
+endif()
 
 set(PUBLIC_HEADERS
     # base32
