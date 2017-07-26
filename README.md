@@ -1,6 +1,6 @@
 # cppcodec
 
-[![Build Status](https://travis-ci.org/tplgy/cppcodec.png)](https://travis-ci.org/tplgy/cppcodec)
+[![Build Status](https://travis-ci.org/tplgy/cppcodec.png)](https://travis-ci.org/tplgy/cppcodec) [![Build status](https://ci.appveyor.com/api/projects/status/175l4gr9pc5mmp9s?svg=true)](https://ci.appveyor.com/project/jpetso/cppcodec)
 
 Header-only C++11 library to encode/decode base64, base64url, base32, base32hex
 and hex (a.k.a. base16) as specified in RFC 4648, plus Crockford's base32.
