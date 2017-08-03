@@ -21,10 +21,11 @@ set(PUBLIC_HEADERS
     cppcodec/base32_rfc4648.hpp
     # base64
     cppcodec/base64_default_rfc4648.hpp
-    cppcodec/base64_default_url_unpadded.hpp
     cppcodec/base64_default_url.hpp
+    cppcodec/base64_default_url_unpadded.hpp
     cppcodec/base64_rfc4648.hpp
     cppcodec/base64_url.hpp
+    cppcodec/base64_url_unpadded.hpp
     # hex
     cppcodec/hex_default_lower.hpp
     cppcodec/hex_default_upper.hpp
