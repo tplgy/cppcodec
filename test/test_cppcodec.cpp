@@ -24,6 +24,7 @@
 #define CATCH_CONFIG_MAIN
 #include "catch/single_include/catch.hpp"
 
+#include <array>
 #include <cppcodec/base32_crockford.hpp>
 #include <cppcodec/base32_hex.hpp>
 #include <cppcodec/base32_rfc4648.hpp>
@@ -35,6 +36,51 @@
 #include <stdint.h>
 #include <string.h> // for memcmp()
 #include <vector>
+
+// to test std::array-like support
+template <typename T, size_t N>
+class proxy_array
+{
+public:
+  proxy_array() = default;
+  proxy_array(std::initializer_list<T> l)
+  {
+    std::copy(l.begin(), l.end(), _arr.data());
+  }
+
+  size_t size() const noexcept
+  {
+    return _arr.size();
+  }
+
+  T const* data() const noexcept
+  {
+    return _arr.data();
+  }
+
+  T* data() noexcept
+  {
+    return _arr.data();
+  }
+
+  template <typename U, size_t M>
+  friend bool operator==(const proxy_array<U, M>& lhs, const proxy_array<U, M>& rhs) noexcept
+  {
+    return lhs._arr == rhs._arr;
+  }
+
+private:
+  std::array<T, N> _arr;
+};
+
+namespace std
+{
+template <typename T, size_t N>
+struct tuple_size<::proxy_array<T, N>>
+{
+  static size_t constexpr value = N;
+};
+}
 
 TEST_CASE("Douglas Crockford's base32", "[base32][crockford]") {
     using base32 = cppcodec::base32_crockford;
@@ -114,6 +160,8 @@ TEST_CASE("Douglas Crockford's base32", "[base32][crockford]") {
         REQUIRE(base32::decode("91JPRV3F41BPYWKCCG") == hello_uint_vector);
 
         REQUIRE(base32::decode<std::string>("CSQPY") == "foo");
+        REQUIRE((base32::decode<std::array<uint8_t, 3>>("CSQPY") == std::array<uint8_t, 3>{ 102, 111, 111}));
+        REQUIRE((base32::decode<proxy_array<char, 3>>("CSQPY") == proxy_array<char, 3>{'f', 'o', 'o'}));
         REQUIRE(base32::decode<std::string>("DHQQESBJCDGQ6S90AN850HAJ8D0N6H9064T36D1N6RVJ08A04CJ2AQH658")
                 == "lowercase UPPERCASE 1434567 !@#$%^&*");
 
