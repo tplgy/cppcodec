@@ -87,12 +87,10 @@ public:
     //
     // Decoding
 
-    // Convenient version, returns an std::vector<uint8_t>.
-    static std::vector<uint8_t> decode(const char* encoded, size_t encoded_size);
+    // Convenient version with templated result type, by default std::vector<uint8_t>.
+    template <typename Result = std::vector<uint8_t>> static Result decode(const char* encoded, size_t encoded_size);
     // static std::vector<uint8_t> decode(const T& encoded); -> provided by template below
 
-    // Convenient version with templated result type.
-    template <typename Result> static Result decode(const char* encoded, size_t encoded_size);
     template <typename Result = std::vector<uint8_t>, typename T = std::string>
     static Result decode(const T& encoded);
 
@@ -235,12 +233,6 @@ inline constexpr size_t codec<CodecImpl>::encoded_size(size_t binary_size) noexc
 
 //
 // Decoding
-
-template <typename CodecImpl>
-inline std::vector<uint8_t> codec<CodecImpl>::decode(const char* encoded, size_t encoded_size)
-{
-    return decode<std::vector<uint8_t>>(encoded, encoded_size);
-}
 
 template <typename CodecImpl>
 template <typename Result>
