@@ -24,6 +24,7 @@
 #define CATCH_CONFIG_MAIN
 #include "catch/single_include/catch.hpp"
 
+#include <array>
 #include <cppcodec/base32_crockford.hpp>
 #include <cppcodec/base32_hex.hpp>
 #include <cppcodec/base32_rfc4648.hpp>
@@ -35,6 +36,51 @@
 #include <stdint.h>
 #include <string.h> // for memcmp()
 #include <vector>
+
+// to test std::array-like support
+template <typename T, size_t N>
+class proxy_array
+{
+public:
+  proxy_array() = default;
+  proxy_array(std::initializer_list<T> l)
+  {
+    std::copy(l.begin(), l.end(), _arr.data());
+  }
+
+  size_t size() const noexcept
+  {
+    return _arr.size();
+  }
+
+  T const* data() const noexcept
+  {
+    return _arr.data();
+  }
+
+  T* data() noexcept
+  {
+    return _arr.data();
+  }
+
+  template <typename U, size_t M>
+  friend bool operator==(const proxy_array<U, M>& lhs, const proxy_array<U, M>& rhs) noexcept
+  {
+    return lhs._arr == rhs._arr;
+  }
+
+private:
+  std::array<T, N> _arr;
+};
+
+namespace std
+{
+template <typename T, size_t N>
+struct tuple_size<::proxy_array<T, N>>
+{
+  static size_t constexpr value = N;
+};
+}
 
 TEST_CASE("Douglas Crockford's base32", "[base32][crockford]") {
     using base32 = cppcodec::base32_crockford;
@@ -114,6 +160,8 @@ TEST_CASE("Douglas Crockford's base32", "[base32][crockford]") {
         REQUIRE(base32::decode("91JPRV3F41BPYWKCCG") == hello_uint_vector);
 
         REQUIRE(base32::decode<std::string>("CSQPY") == "foo");
+        REQUIRE((base32::decode<std::array<uint8_t, 3>>("CSQPY") == std::array<uint8_t, 3>{ 102, 111, 111}));
+        REQUIRE((base32::decode<proxy_array<char, 3>>("CSQPY") == proxy_array<char, 3>{'f', 'o', 'o'}));
         REQUIRE(base32::decode<std::string>("DHQQESBJCDGQ6S90AN850HAJ8D0N6H9064T36D1N6RVJ08A04CJ2AQH658")
                 == "lowercase UPPERCASE 1434567 !@#$%^&*");
 
@@ -540,6 +588,13 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE(base64::decode<std::string>(std::string("TWFu")) == "Man");
         REQUIRE(base64::decode<std::string>("TWFu") == "Man");
 
+        std::array<uint8_t, 32> raw_buffer = {
+            0x04, 0x42, 0xa2, 0x80, 0xab, 0x5b, 0x23, 0x55, 0x53, 0xb9, 0x24,
+            0x89, 0x8f, 0x32, 0xcb, 0x08, 0xc7, 0x1f, 0x6c, 0xdf, 0xf3, 0xf0,
+            0xa5, 0xeb, 0xfe, 0x1e, 0x56, 0xd9, 0xbc, 0xf3, 0x78, 0xd5};
+
+        REQUIRE((base64::decode<std::array<uint8_t, 32>>("BEKigKtbI1VTuSSJjzLLCMcfbN/z8KXr/h5W2bzzeNU=") == raw_buffer));
+
         // Wikipedia
         REQUIRE(base64::decode<std::string>("cGxlYXN1cmUu") == "pleasure.");
         REQUIRE(base64::decode<std::string>("bGVhc3VyZS4=") == "leasure.");
@@ -577,6 +632,8 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE_THROWS_AS(base64::decode("A==="), cppcodec::invalid_input_length&);
         REQUIRE_THROWS_AS(base64::decode("AAAA===="), cppcodec::invalid_input_length&);
         REQUIRE_THROWS_AS(base64::decode("AAAAA==="), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS((base64::decode<std::array<char, 1>>("QUJD")), cppcodec::invalid_output_length&);
+        REQUIRE_THROWS_AS((base64::decode<std::array<char, 4>>("QUJD")), cppcodec::invalid_output_length&);
 
         // An invalid symbol should throw a symbol error.
         REQUIRE_THROWS_AS(base64::decode("A&B="), cppcodec::symbol_error&);

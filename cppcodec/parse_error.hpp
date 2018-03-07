@@ -93,6 +93,18 @@ public:
     using parse_error::parse_error;
 };
 
+class invalid_output_length : public std::domain_error
+{
+  public:
+    invalid_output_length(std::size_t output_length, std::size_t input_length)
+        : std::domain_error("error: output length is " +
+                            std::to_string(output_length) + " but " +
+                            std::to_string(input_length) + " are to be written") {
+    }
+
+    invalid_output_length(const invalid_output_length&) = default;
+};
+
 class padding_error : public invalid_input_length
 {
 public:
