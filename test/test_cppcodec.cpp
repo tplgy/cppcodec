@@ -588,6 +588,13 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE(base64::decode<std::string>(std::string("TWFu")) == "Man");
         REQUIRE(base64::decode<std::string>("TWFu") == "Man");
 
+        std::array<uint8_t, 32> raw_buffer = {
+            0x04, 0x42, 0xa2, 0x80, 0xab, 0x5b, 0x23, 0x55, 0x53, 0xb9, 0x24,
+            0x89, 0x8f, 0x32, 0xcb, 0x08, 0xc7, 0x1f, 0x6c, 0xdf, 0xf3, 0xf0,
+            0xa5, 0xeb, 0xfe, 0x1e, 0x56, 0xd9, 0xbc, 0xf3, 0x78, 0xd5};
+
+        REQUIRE((base64::decode<std::array<uint8_t, 32>>("BEKigKtbI1VTuSSJjzLLCMcfbN/z8KXr/h5W2bzzeNU=") == raw_buffer));
+
         // Wikipedia
         REQUIRE(base64::decode<std::string>("cGxlYXN1cmUu") == "pleasure.");
         REQUIRE(base64::decode<std::string>("bGVhc3VyZS4=") == "leasure.");
@@ -625,6 +632,8 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE_THROWS_AS(base64::decode("A==="), cppcodec::invalid_input_length&);
         REQUIRE_THROWS_AS(base64::decode("AAAA===="), cppcodec::invalid_input_length&);
         REQUIRE_THROWS_AS(base64::decode("AAAAA==="), cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS((base64::decode<std::array<char, 1>>("QUJD")), cppcodec::invalid_output_length&);
+        REQUIRE_THROWS_AS((base64::decode<std::array<char, 4>>("QUJD")), cppcodec::invalid_output_length&);
 
         // An invalid symbol should throw a symbol error.
         REQUIRE_THROWS_AS(base64::decode("A&B="), cppcodec::symbol_error&);

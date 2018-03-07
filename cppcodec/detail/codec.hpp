@@ -32,6 +32,7 @@
 
 #include "../data/access.hpp"
 #include "../data/raw_result_buffer.hpp"
+#include "../parse_error.hpp"
 
 namespace cppcodec {
 namespace detail {
@@ -276,10 +277,12 @@ template <
 void decode_impl(Result& binary_result, const char* encoded,
                         size_t encoded_size)
 {
-  static_assert(std::tuple_size<Result>::value > 0,
-                "Empty static-sized container");
-  codec<CodecImpl>::decode(binary_result.data(), binary_result.size(), encoded,
-                           encoded_size);
+  constexpr auto output_length = std::tuple_size<Result>::value;
+  static_assert(output_length > 0, "Empty static-sized container");
+  const auto vec = codec<CodecImpl>::decode(encoded, encoded_size);
+  if (output_length != vec.size())
+    throw cppcodec::invalid_output_length(output_length, vec.size());
+  std::copy(vec.begin(), vec.end(), binary_result.data());
 }
 
 template <typename CodecImpl>
