@@ -22,7 +22,7 @@
  */
 
 #define CATCH_CONFIG_MAIN
-#include "catch/single_include/catch.hpp"
+#include <catch.hpp>
 
 #include <cppcodec/base32_crockford.hpp>
 #include <cppcodec/base32_hex.hpp>
