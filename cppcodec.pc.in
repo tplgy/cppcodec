@@ -1,0 +1,7 @@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+
+Name: @CMAKE_PROJECT_NAME@
+Description: C++ header-only library to encode/decode base64, base64url, base32, base32hex and hex
+URL: https://github.com/tplgy/cppcodec
+Version: @PROJECT_VERSION@
+Cflags: -I${includedir}

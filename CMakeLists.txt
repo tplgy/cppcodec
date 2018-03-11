@@ -1,14 +1,27 @@
-cmake_minimum_required(VERSION 2.8)
-project(cppcodec)
+cmake_minimum_required(VERSION 2.8.5)
+project(cppcodec CXX)
+set(PROJECT_VERSION 0.1)
 
-option(build_tests "Build tests (run as 'test' target)" ON)
+include(GNUInstallDirs)
+include(CTest)
 
 # These flags are for binaries built by this particular CMake project (test_cppcodec, base64enc, etc.).
 # In your own project that uses cppcodec, you might want to specify a different standard or error level.
 if (MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
+
+  # Request C++11
+  if(${CMAKE_VERSION} VERSION_LESS 3.1)
+    # CMake versions before 3.1 do not understand CMAKE_CXX_STANDARD
+    # remove this block once CMake >=3.1 has fixated in the ecosystem
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  else()
+    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+  endif()
 endif()
 
 set(PUBLIC_HEADERS
@@ -46,12 +59,16 @@ add_library(cppcodec OBJECT ${PUBLIC_HEADERS}) # unnecessary for building, but m
 set_target_properties(cppcodec PROPERTIES LINKER_LANGUAGE CXX)
 add_subdirectory(tool)
 
-if (build_tests)
-    enable_testing()
+if (BUILD_TESTING)
     add_subdirectory(test)
 endif()
 
 foreach(h ${PUBLIC_HEADERS})
-    get_filename_component(HEADER_INCLUDE_DIRECTORY include/${h} PATH) # use DIRECTORY instead of PATH once requiring CMake 3.0
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${h} DESTINATION ${HEADER_INCLUDE_DIRECTORY} COMPONENT "headers")
+    get_filename_component(FINAL_PATH ${h} PATH) # use DIRECTORY instead of PATH once requiring CMake 3.0
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${h} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${FINAL_PATH} COMPONENT "headers")
 endforeach()
+
+if (NOT WIN32)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cppcodec.pc.in ${CMAKE_CURRENT_BINARY_DIR}/cppcodec-1.pc @ONLY)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cppcodec-1.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
+endif()
