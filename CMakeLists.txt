@@ -66,3 +66,8 @@ foreach(h ${PUBLIC_HEADERS})
     get_filename_component(FINAL_PATH ${h} PATH) # use DIRECTORY instead of PATH once requiring CMake 3.0
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${h} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${FINAL_PATH} COMPONENT "headers")
 endforeach()
+
+if (NOT WIN32)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cppcodec.pc.in ${CMAKE_CURRENT_BINARY_DIR}/cppcodec-1.pc @ONLY)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cppcodec-1.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
+endif()
