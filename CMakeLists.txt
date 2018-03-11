@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.5)
 project(cppcodec CXX)
+set(PROJECT_VERSION 0.1)
 
 include(GNUInstallDirs)
 include(CTest)
