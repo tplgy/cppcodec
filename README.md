@@ -62,9 +62,11 @@ or `<cppcodec/hex_lower.hpp>`. Currently supported variants are:
 * `base64_url` is the same as `base64_rfc4648` (and defined in the same RFC)
   but uses '-' (minus) and '_' (underscore) as special characters instead of
   '+' and '/'. This is safe to use for URLs and file names. Padding with '=' is
-  still required.
-* `base64_url_unpadded` variant is the same as `base64_url`, if you want
-  to do without padding (which, for this one, is optional).
+  required, it will be generated when encoding to a string and regarded as a
+  parse error if it's not present when decoding.
+* `base64_url_unpadded` variant is the same as `base64_url`, but '=' padding
+  characters are optional. When encoding, no padding will be appended to the
+  resulting string. Decoding accepts either padded or unpadded strings.
 
 ### base32
 
