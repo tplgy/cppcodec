@@ -45,16 +45,16 @@ class base64_rfc4648
 public:
     template <typename Codec> using codec_impl = stream_codec<Codec, base64_rfc4648>;
 
-    static inline constexpr bool generates_padding() { return true; }
-    static inline constexpr bool requires_padding() { return true; }
-    static inline constexpr char padding_symbol() { return '='; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool generates_padding() { return true; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool requires_padding() { return true; }
+    static CPPCODEC_ALWAYS_INLINE constexpr char padding_symbol() { return '='; }
 
-    static inline constexpr char symbol(uint8_t index)
+    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(uint8_t index)
     {
         return base64_rfc4648_alphabet[index];
     }
 
-    static inline constexpr uint8_t index_of(char c)
+    static CPPCODEC_ALWAYS_INLINE constexpr uint8_t index_of(char c)
     {
         return (c >= 'A' && c <= 'Z') ? (c - 'A')
                 : (c >= 'a' && c <= 'z') ? (c - 'a' + 26)
@@ -67,10 +67,10 @@ public:
     }
 
     // RFC4648 does not specify any whitespace being allowed in base64 encodings.
-    static inline constexpr bool should_ignore(uint8_t /*index*/) { return false; }
-    static inline constexpr bool is_special_character(uint8_t index) { return index > 64; }
-    static inline constexpr bool is_padding_symbol(uint8_t index) { return index == 254; }
-    static inline constexpr bool is_eof(uint8_t index) { return index == 255; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool should_ignore(uint8_t /*index*/) { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_special_character(uint8_t index) { return index > 64; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(uint8_t index) { return index == 254; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof(uint8_t index) { return index == 255; }
 };
 
 } // namespace detail
