@@ -68,7 +68,9 @@ public:
 
     static CPPCODEC_ALWAYS_INLINE constexpr uint8_t num_encoded_tail_symbols(uint8_t /*num_bytes*/) noexcept
     {
-        return true ? 0 : throw std::domain_error("no tails in hex encoding, should never be called");
+        // Hex encoding only works on full bytes so there are no tails,
+        // no padding characters, and this function should (must) never be called.
+        return 0;
     }
 
     template <uint8_t I>
