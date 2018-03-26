@@ -35,8 +35,8 @@ class base64_url_unpadded : public base64_url
 public:
     template <typename Codec> using codec_impl = stream_codec<Codec, base64_url_unpadded>;
 
-    static inline constexpr bool generates_padding() { return false; }
-    static inline constexpr bool requires_padding() { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool generates_padding() { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool requires_padding() { return false; }
 };
 
 } // namespace detail

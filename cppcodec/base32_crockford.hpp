@@ -44,16 +44,16 @@ static_assert(sizeof(base32_crockford_alphabet) == 32, "base32 alphabet must hav
 class base32_crockford_base
 {
 public:
-    static inline constexpr bool generates_padding() { return false; }
-    static inline constexpr bool requires_padding() { return false; }
-    static inline constexpr bool is_padding_symbol(char /*c*/) { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool generates_padding() { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool requires_padding() { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(char /*c*/) { return false; }
 
-    static inline constexpr char symbol(uint8_t index)
+    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(uint8_t index)
     {
         return base32_crockford_alphabet[index];
     }
 
-    static inline constexpr uint8_t index_of(char c)
+    static CPPCODEC_ALWAYS_INLINE constexpr uint8_t index_of(char c)
     {
         return (c >= '0' && c <= '9') ? (c - '0')
                 // upper-case letters
@@ -76,9 +76,9 @@ public:
                 : throw symbol_error(c);
     }
 
-    static inline constexpr bool should_ignore(uint8_t index) { return index == 253; }
-    static inline constexpr bool is_special_character(uint8_t index) { return index > 32; }
-    static inline constexpr bool is_eof(uint8_t index) { return index == 255; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool should_ignore(uint8_t index) { return index == 253; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_special_character(uint8_t index) { return index > 32; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof(uint8_t index) { return index == 255; }
 };
 
 // base32_crockford is a concatenative iterative (i.e. streaming) interpretation of Crockford base32.

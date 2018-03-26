@@ -42,7 +42,7 @@ class hex_lower : public hex_base
 public:
     template <typename Codec> using codec_impl = stream_codec<Codec, hex_lower>;
 
-    static inline constexpr char symbol(uint8_t index)
+    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(uint8_t index)
     {
         return hex_lower_alphabet[index];
     }

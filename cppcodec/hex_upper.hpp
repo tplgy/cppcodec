@@ -42,7 +42,7 @@ class hex_upper : public hex_base
 public:
     template <typename Codec> using codec_impl = stream_codec<Codec, hex_upper>;
 
-    static inline constexpr char symbol(uint8_t index)
+    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(uint8_t index)
     {
         return hex_upper_alphabet[index];
     }
