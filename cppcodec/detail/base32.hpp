@@ -57,9 +57,13 @@ public:
                 : throw std::domain_error("invalid number of bytes in a tail block");
     }
 
-    template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index(
-            const uint8_t* b /*binary block*/)
+    template <uint8_t I>
+    CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index(
+            const uint8_t* b /*binary block*/) noexcept
     {
+        static_assert(I >= 0 && I < encoded_block_size(),
+                "invalid encoding symbol index in a block");
+
         return (I == 0) ? ((b[0] >> 3) & 0x1F) // first 5 bits
                 : (I == 1) ? (((b[0] << 2) & 0x1C) | ((b[1] >> 6) & 0x3))
                 : (I == 2) ? ((b[1] >> 1) & 0x1F)
@@ -67,18 +71,29 @@ public:
                 : (I == 4) ? (((b[2] << 1) & 0x1E) | ((b[3] >> 7) & 0x1))
                 : (I == 5) ? ((b[3] >> 2) & 0x1F)
                 : (I == 6) ? (((b[3] << 3) & 0x18) | ((b[4] >> 5) & 0x7))
-                : (I == 7) ? (b[4] & 0x1F) // last 5 bits
-                : throw std::domain_error("invalid encoding symbol index in a block");
+                : /*I == 7*/ (b[4] & 0x1F); // last 5 bits;
     }
 
-    template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index_last(
+    template <bool B>
+    using uint8_if = typename std::enable_if<B, uint8_t>::type;
+
+    template <uint8_t I>
+    CPPCODEC_ALWAYS_INLINE static constexpr
+    uint8_if<I == 1 || I == 3 || I == 4 || I == 6> index_last(
+            const uint8_t* b /*binary block*/) noexcept
+    {
+        return (I == 1) ? ((b[0] << 2) & 0x1C)     // abbreviated 2nd symbol
+                : (I == 3) ? ((b[1] << 4) & 0x10)  // abbreviated 4th symbol
+                : (I == 4) ? ((b[2] << 1) & 0x1E)  // abbreviated 5th symbol
+                : /*I == 6*/ ((b[3] << 3) & 0x18); // abbreviated 7th symbol
+    }
+
+    template <uint8_t I>
+    CPPCODEC_ALWAYS_INLINE static
+    uint8_if<I != 1 && I != 3 && I != 4 && I != 6> index_last(
             const uint8_t* b /*binary block*/)
     {
-        return (I == 1) ? ((b[0] << 2) & 0x1C)    // abbreviated 2nd symbol
-                : (I == 3) ? ((b[1] << 4) & 0x10) // abbreviated 4th symbol
-                : (I == 4) ? ((b[2] << 1) & 0x1E) // abbreviated 5th symbol
-                : (I == 6) ? ((b[3] << 3) & 0x18) // abbreviated 7th symbol
-                : throw std::domain_error("invalid last encoding symbol index in a tail");
+        throw std::domain_error("invalid last encoding symbol index in a tail");
     }
 
     template <typename Result, typename ResultState>
