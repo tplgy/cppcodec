@@ -25,6 +25,11 @@
 #define CPPCODEC_DETAIL_DATA_ACCESS
 
 #include <stdint.h> // for size_t
+#include <string> // for static_assert() checking that string will be optimized
+#include <type_traits> // for std::enable_if and such
+#include <vector> // for static_assert() checking that vector will be optimized
+
+#include "../detail/config.hpp" // for CPPCODEC_ALWAYS_INLINE
 
 namespace cppcodec {
 namespace data {
@@ -37,8 +42,11 @@ namespace data {
 // For const (read-only) types: char_data(const T&)
 // For both const and result types: size(const T&)
 
-template <typename T> inline size_t size(const T& t) { return t.size(); }
-template <typename T, size_t N> inline constexpr size_t size(const T (&t)[N]) noexcept {
+template <typename T>
+CPPCODEC_ALWAYS_INLINE size_t size(const T& t) { return t.size(); }
+
+template <typename T, size_t N>
+CPPCODEC_ALWAYS_INLINE constexpr size_t size(const T (&t)[N]) noexcept {
     return N * sizeof(t[0]);
 }
 
@@ -46,12 +54,16 @@ class general_t {};
 class specific_t : public general_t {};
 
 class empty_result_state {
-    template <typename Result> inline void size(const Result& result) { return size(result); }
+    template <typename Result>
+    CPPCODEC_ALWAYS_INLINE void size(const Result& result) { return size(result); }
 };
 
 // SFINAE: Generic fallback in case no specific state function applies.
 template <typename Result>
-inline empty_result_state create_state(Result&, general_t) { return empty_result_state(); }
+CPPCODEC_ALWAYS_INLINE empty_result_state create_state(Result&, general_t)
+{
+    return empty_result_state();
+}
 
 //
 // Generic templates for containers: Use these init()/put()/finish()
@@ -59,14 +71,14 @@ inline empty_result_state create_state(Result&, general_t) { return empty_result
 //
 
 template <typename Result>
-inline void init(Result& result, empty_result_state&, size_t capacity)
+CPPCODEC_ALWAYS_INLINE void init(Result& result, empty_result_state&, size_t capacity)
 {
     result.resize(0);
     result.reserve(capacity);
 }
 
 template <typename Result>
-inline void finish(Result&, empty_result_state&)
+CPPCODEC_ALWAYS_INLINE void finish(Result&, empty_result_state&)
 {
     // Default is to push_back(), which already increases the size.
 }
@@ -86,52 +98,68 @@ template <typename Result> inline void put_uint8(Result& result, uint8_t c) { re
 
 template <bool> struct put_impl;
 template <> struct put_impl<true> { // put_uint8() available
-    template<typename Result> static void put(Result& result, uint8_t c) { put_uint8(result, c); }
+    template<typename Result>
+    static CPPCODEC_ALWAYS_INLINE void put(Result& result, uint8_t c)
+    {
+        put_uint8(result, c);
+    }
 };
 template <> struct put_impl<false> { // put_uint8() not available
-    template<typename Result> static void put(Result& result, uint8_t c) {
+    template<typename Result>
+    static CPPCODEC_ALWAYS_INLINE void put(Result& result, uint8_t c)
+    {
         result.push_back(static_cast<char>(c));
     }
 };
 
-template <typename Result> inline void put(Result& result, empty_result_state&, uint8_t c)
+template <typename Result>
+CPPCODEC_ALWAYS_INLINE void put(Result& result, empty_result_state&, uint8_t c)
 {
     using namespace fallback;
     put_impl<sizeof(fallback::flag(), put_uint8(result, c), fallback::flag()) != 1>::put(result, c);
 }
 
 //
-// Specialization for container types with direct mutable data access.
-// The expected way to specialize is to subclass empty_result_state and
+// Specialization for container types with direct mutable data access,
+// e.g. std::vector<uint8_t>.
+//
+// The expected way to specialize is to draft a new xyz_result_state type and
 // return an instance of it from a create_state() template specialization.
 // You can then create overloads for init(), put() and finish()
-// that are more specific than the empty_result_state ones above.
-// See the example below for direct access to a mutable data() method.
+// for the new result state type.
 //
 // If desired, a non-templated overload for both specific types
 // (result & state) can be added to tailor it to that particular result type.
 //
 
-template <typename Result> class direct_data_access_result_state : empty_result_state
+template <typename T>
+constexpr auto data_is_mutable(T* t) -> decltype(t->data()[size_t(0)] = 'x', bool())
+{
+    return true;
+}
+constexpr bool data_is_mutable(...) { return false; }
+
+template <typename Result>
+class direct_data_access_result_state
 {
 public:
-    using result_type = Result;
-
-    inline void init(Result& result, size_t capacity)
+    CPPCODEC_ALWAYS_INLINE void init(Result& result, size_t capacity)
     {
-        // resize(0) is not called here since we don't rely on it
-        result.reserve(capacity);
+        // reserve() may not actually allocate the storage right away,
+        // and it isn't guaranteed that it will be untouched upon the
+        //.next resize(). In that light, resize from the start and
+        // slightly reduce the size at the end if necessary.
+        result.resize(capacity);
     }
-    inline void put(Result& result, char c)
+    CPPCODEC_ALWAYS_INLINE void put(Result& result, char c)
     {
-        // This only compiles if decltype(data) == char*
-        result.data()[m_offset++] = static_cast<char>(c);
+        result.data()[m_offset++] = c;
     }
-    inline void finish(Result& result)
+    CPPCODEC_ALWAYS_INLINE void finish(Result& result)
     {
         result.resize(m_offset);
     }
-    inline size_t size(const Result&)
+    CPPCODEC_ALWAYS_INLINE size_t size(const Result&)
     {
         return m_offset;
     }
@@ -142,21 +170,121 @@ private:
 // SFINAE: Select a specific state based on the result type and possible result state type.
 // Implement this if direct data access (`result.data()[0] = 'x') isn't already possible
 // and you want to specialize it for your own result type.
-template <typename Result, typename ResultState =
-        typename direct_data_access_result_state<Result>::result_type::value>
-inline ResultState create_state(Result&, specific_t) { return ResultState(); }
-
-template <typename Result>
-inline void init(Result& result, direct_data_access_result_state<Result>& state, size_t capacity)
+// Note: The enable_if should ideally be part of the class declaration,
+//       but Visual Studio C++ will not compile it that way.
+//       Have it here in the factory function instead.
+template <typename Result,
+          typename = typename std::enable_if<
+                  data_is_mutable((Result*)nullptr)>::type>
+CPPCODEC_ALWAYS_INLINE direct_data_access_result_state<Result> create_state(Result&, specific_t)
 {
-    state.init(result);
+    return direct_data_access_result_state<Result>();
 }
 
-// Specialized put function for direct_data_access_result_state.
+static_assert(std::is_same<
+        decltype(create_state(*(std::vector<uint8_t>*)nullptr, specific_t())),
+        direct_data_access_result_state<std::vector<uint8_t>>>::value,
+        "std::vector<uint8_t> must be handled by direct_data_access_result_state");
+
+// Specialized init(), put() and finish() functions for direct_data_access_result_state.
 template <typename Result>
-inline void put(Result& result, direct_data_access_result_state<Result>& state, char c)
+CPPCODEC_ALWAYS_INLINE void init(Result& result, direct_data_access_result_state<Result>& state, size_t capacity)
+{
+    state.init(result, capacity);
+}
+
+template <typename Result>
+CPPCODEC_ALWAYS_INLINE void put(Result& result, direct_data_access_result_state<Result>& state, char c)
 {
     state.put(result, c);
+}
+
+template <typename Result>
+CPPCODEC_ALWAYS_INLINE void finish(Result& result, direct_data_access_result_state<Result>& state)
+{
+    state.finish(result);
+}
+
+//
+// Specialization for container types with direct mutable array access,
+// e.g. std::string. This is generally faster because bound checks are
+// minimal and operator[] is more likely noexcept. In addition,
+// std::string::push_back() needs to write a null character on every
+// expansion, which should be more efficient when done in bulk by resize().
+//
+// Compared to the above, tracking an extra offset variable is cheap.
+//
+
+template <typename T>
+constexpr auto array_access_is_mutable(T* t) -> decltype((*t)[size_t(0)] = 'x', bool())
+{
+    return true;
+}
+constexpr bool array_access_is_mutable(...) { return false; }
+
+template <typename Result>
+class array_access_result_state
+{
+public:
+    CPPCODEC_ALWAYS_INLINE void init(Result& result, size_t capacity)
+    {
+        // reserve() may not actually allocate the storage right away,
+        // and it isn't guaranteed that it will be untouched upon the
+        //.next resize(). In that light, resize from the start and
+        // slightly reduce the size at the end if necessary.
+        result.resize(capacity);
+    }
+    CPPCODEC_ALWAYS_INLINE void put(Result& result, char c)
+    {
+        result[m_offset++] = c;
+    }
+    CPPCODEC_ALWAYS_INLINE void finish(Result& result)
+    {
+        result.resize(m_offset);
+    }
+    CPPCODEC_ALWAYS_INLINE size_t size(const Result&)
+    {
+        return m_offset;
+    }
+private:
+    size_t m_offset = 0;
+};
+
+// SFINAE: Select a specific state based on the result type and possible result state type.
+// Note: The enable_if should ideally be part of the class declaration,
+//       but Visual Studio C++ will not compile it that way.
+//       Have it here in the factory function instead.
+template <typename Result,
+          typename = typename std::enable_if<
+                  !data_is_mutable((Result*)nullptr) // no more than one template option
+                  && array_access_is_mutable((Result*)nullptr)>::type>
+CPPCODEC_ALWAYS_INLINE array_access_result_state<Result> create_state(Result&, specific_t)
+{
+    return array_access_result_state<Result>();
+}
+
+static_assert(std::is_same<
+        decltype(create_state(*(std::string*)nullptr, specific_t())),
+        array_access_result_state<std::string>>::value,
+        "std::string must be handled by array_access_result_state");
+
+// Specialized init(), put() and finish() functions for array_access_result_state.
+template <typename Result>
+CPPCODEC_ALWAYS_INLINE void init(Result& result, array_access_result_state<Result>& state, size_t capacity)
+{
+    state.init(result, capacity);
+}
+
+template <typename Result>
+CPPCODEC_ALWAYS_INLINE void put(Result& result, array_access_result_state<Result>& state, char c)
+{
+    state.put(result, c);
+}
+
+template <typename Result>
+CPPCODEC_ALWAYS_INLINE void finish(Result& result, array_access_result_state<Result>& state)
+{
+    state.finish(result);
 }
 
 // char_data() is only used to read, not for result buffers.
