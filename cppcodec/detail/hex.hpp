@@ -68,21 +68,40 @@ public:
 
     static CPPCODEC_ALWAYS_INLINE constexpr uint8_t num_encoded_tail_symbols(uint8_t /*num_bytes*/) noexcept
     {
-        return true ? 0 : throw std::domain_error("no tails in hex encoding, should never be called");
+        // Hex encoding only works on full bytes so there are no tails,
+        // no padding characters, and this function should (must) never be called.
+        return 0;
     }
 
-    template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index(
+    template <uint8_t I>
+    CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index(
             const uint8_t* b /*binary block*/) noexcept
     {
+        static_assert(I >= 0 && I < encoded_block_size(),
+                "invalid encoding symbol index in a block");
+
         return (I == 0) ? (b[0] >> 4) // first 4 bits
-                : (I == 1) ? (b[0] & 0xF) // last 4 bits
-                : throw std::domain_error("invalid encoding symbol index in a block");
+                : /*I == 1*/ (b[0] & 0xF); // last 4 bits
     }
 
-        template <uint8_t I> CPPCODEC_ALWAYS_INLINE static constexpr uint8_t index_last(
-                const uint8_t* b /*binary block*/) noexcept
+    // With only 2 bytes, enc<1> will always result in a full index() call and
+    // enc<0> will be protected by a not-reached assertion, so we don't actually
+    // care about index_last() except optimizing it out as good as possible.
+    template <bool B>
+    using uint8_if = typename std::enable_if<B, uint8_t>::type;
+
+    template <uint8_t I>
+    CPPCODEC_ALWAYS_INLINE static constexpr uint8_if<I == 0> index_last(
+            const uint8_t* b /*binary block*/) noexcept
     {
-        return true ? 0 : throw std::domain_error("invalid last encoding symbol index in a tail");
+        return 0;
+    }
+
+    template <uint8_t I>
+    CPPCODEC_ALWAYS_INLINE static uint8_if<I != 0> index_last(
+            const uint8_t* b /*binary block*/)
+    {
+        throw std::domain_error("invalid last encoding symbol index in a tail");
     }
 
     template <typename Result, typename ResultState>
