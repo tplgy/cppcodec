@@ -7,20 +7,26 @@ include(CTest)
 
 # These flags are for binaries built by this particular CMake project (test_cppcodec, base64enc, etc.).
 # In your own project that uses cppcodec, you might want to specify a different standard or error level.
+
+# Request C++11, or let the user specify the standard on via -D command line option.
+if (NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 11)
+endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 if (MSVC)
+  # MSVC will respect CMAKE_CXX_STANDARD for CMake >= 3.10 and MSVC >= 19.0.24215
+  # (VS 2017 15.3). Older versions will use the compiler default, which should be
+  # fine for anything except ancient MSVC versions.
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 
-  # Request C++11
+  # CMake versions before 3.1 do not understand CMAKE_CXX_STANDARD.
+  # Remove this block once CMake >=3.1 has fixated in the ecosystem.
   if(${CMAKE_VERSION} VERSION_LESS 3.1)
-    # CMake versions before 3.1 do not understand CMAKE_CXX_STANDARD
-    # remove this block once CMake >=3.1 has fixated in the ecosystem
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  else()
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD}")
   endif()
 endif()
 
