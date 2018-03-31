@@ -263,10 +263,17 @@ CPPCODEC_ALWAYS_INLINE array_access_result_state<Result> create_state(Result&, s
     return array_access_result_state<Result>();
 }
 
+#if __cplusplus < 201703L
 static_assert(std::is_same<
         decltype(create_state(*(std::string*)nullptr, specific_t())),
         array_access_result_state<std::string>>::value,
-        "std::string must be handled by array_access_result_state");
+        "std::string (pre-C++17) must be handled by array_access_result_state");
+#else
+static_assert(std::is_same<
+        decltype(create_state(*(std::string*)nullptr, specific_t())),
+        direct_data_access_result_state<std::string>>::value,
+        "std::string (C++17 and later) must be handled by direct_data_access_result_state");
+#endif
 
 // Specialized init(), put() and finish() functions for array_access_result_state.
 template <typename Result>
