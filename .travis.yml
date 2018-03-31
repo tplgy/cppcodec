@@ -1,73 +1,127 @@
+dist: trusty
 language: cpp
 
 # sources  list: https://github.com/travis-ci/apt-source-whitelist/blob/master/ubuntu.json,
-# packages list: https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+# packages list: https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-trusty
 
 matrix:
   include:
+    # Newest/oldest GCC
     - os: linux
       compiler: gcc
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-4.8', 'libstdc++-4.8-dev', 'cmake' ]
-      env: CMAKE_BUILD_TYPE=DEBUG GXX=4.8
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-7' ]
+      env: BUILD_TYPE=MinSizeRel GXX=7 CXX_STD=17
 
     - os: linux
       compiler: gcc
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-4.8', 'libstdc++-4.8-dev', 'cmake' ]
-      env: CMAKE_BUILD_TYPE=RELEASE GXX=4.8
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-7' ]
+      env: BUILD_TYPE=Release GXX=7 CXX_STD=17
 
     - os: linux
       compiler: gcc
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-4.9', 'libstdc++-4.9-dev', 'cmake' ]
-      env: CMAKE_BUILD_TYPE=DEBUG GXX=4.9
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.8' ]
+      env: BUILD_TYPE=Release GXX=4.8
 
+    # Newest/oldest clang
+    # At the time of writing, clang-6.0 doesn't yet apt-get install properly
+    # on Travis. Use 5.0 until the issue is fixed or a workaround is found.
     - os: linux
-      compiler: gcc
+      compiler: clang
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-4.9', 'libstdc++-4.9-dev', 'cmake' ]
-      env: CMAKE_BUILD_TYPE=RELEASE GXX=4.9
-
-    - os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-5', 'libstdc++-5-dev', 'cmake' ]
-      env: CMAKE_BUILD_TYPE=DEBUG GXX=5
-
-    - os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'g++-5', 'libstdc++-5-dev', 'cmake' ]
-      env: CMAKE_BUILD_TYPE=RELEASE GXX=5
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0' ]
+          packages: [ 'clang-5.0', 'libstdc++-7-dev', 'libstdc++6' ] # C++17 support in libstd++
+      env: BUILD_TYPE=MinSizeRel CLANGXX=5.0 CXX_STD=17
 
     - os: linux
       compiler: clang
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'libstdc++-4.8-dev', 'cmake' ]
-      env: CMAKE_BUILD_TYPE=DEBUG
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0' ]
+          packages: [ 'clang-5.0', 'libstdc++-7-dev', 'libstdc++6' ] # C++17 support in libstd++
+      env: BUILD_TYPE=Release CLANGXX=5.0 CXX_STD=17
 
     - os: linux
       compiler: clang
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'kalakris-cmake' ]
-          packages: [ 'libstdc++-4.8-dev', 'cmake' ]
-      env: CMAKE_BUILD_TYPE=RELEASE
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6' ]
+          packages: [ 'clang-3.6' ]
+      env: BUILD_TYPE=Release CLANGXX=3.6
+
+    # Other compiler versions
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-7' ]
+      env: BUILD_TYPE=Debug GXX=7
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-6' ]
+      env: BUILD_TYPE=MinSizeRel GXX=6 CXX_STD=14
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-5' ]
+      env: BUILD_TYPE=Release GXX=5
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.9' ]
+      env: BUILD_TYPE=MinSizeRel GXX=4.9
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.8' ]
+      env: BUILD_TYPE=Debug GXX=4.8
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0' ]
+          packages: [ 'clang-5.0' ]
+      env: BUILD_TYPE=Debug CLANGXX=5.0
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-4.0' ]
+          packages: [ 'clang-4.0' ]
+      env: BUILD_TYPE=Release CLANGXX=4.0
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6' ]
+          packages: [ 'clang-3.6' ]
+      env: BUILD_TYPE=Debug CLANGXX=3.6 CXX_STD=14
 
 # container-based builds
 sudo: false
@@ -76,6 +130,7 @@ before_install:
   - env
   - export SRC_DIR="`pwd`"
   - if [ "$CXX" = "g++" ]; then export CXX="g++-$GXX" CC="gcc-$GXX"; fi
+  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-$CLANGXX" CC="clang-$CLANGXX"; fi
 
 script:
   - $CXX --version
@@ -83,6 +138,7 @@ script:
   - mkdir "$TRAVIS_BUILD_DIR/build"
   - cd "$TRAVIS_BUILD_DIR/build"
   - pwd
-  - cmake "$SRC_DIR"
-  - make
+  - CXX_STD_ARG=""; if [ ! -z "${CXX_STD}" ]; then CXX_STD_ARG="-DCMAKE_CXX_STANDARD=${CXX_STD}"; fi
+  - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${CXX_STD_ARG} "$SRC_DIR"
+  - make -j2 # cores according to https://docs.travis-ci.com/user/reference/overview/
   - CTEST_OUTPUT_ON_FAILURE=1 make test
