@@ -142,3 +142,4 @@ script:
   - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${CXX_STD_ARG} "$SRC_DIR"
   - make -j2 # cores according to https://docs.travis-ci.com/user/reference/overview/
   - CTEST_OUTPUT_ON_FAILURE=1 make test
+  - test/benchmark_cppcodec

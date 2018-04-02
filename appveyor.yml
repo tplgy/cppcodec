@@ -58,3 +58,4 @@ test_script:
   - cd %BUILD_DIR%
   - set CTEST_OUTPUT_ON_FAILURE=1
   - ctest -C %CONFIGURATION% -VV
+  - test\%CONFIGURATION%\benchmark_cppcodec.exe
