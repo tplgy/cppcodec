@@ -1,5 +1,6 @@
 /**
  *  Copyright (C) 2015 Topology LP
+ *  Copyright (C) 2018 Jakob Petsovits
  *  All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,6 +25,7 @@
 #ifndef CPPCODEC_DETAIL_STREAM_CODEC
 #define CPPCODEC_DETAIL_STREAM_CODEC
 
+#include <limits>
 #include <stdlib.h> // for abort()
 #include <stdint.h>
 
@@ -32,6 +34,8 @@
 
 namespace cppcodec {
 namespace detail {
+
+using alphabet_index_t = uint_fast16_t;
 
 template <typename Codec, typename CodecVariant>
 class stream_codec
@@ -104,7 +108,6 @@ struct enc {
 
 template<> // terminating specialization
 struct enc<0> {
-
     template <typename Codec, typename CodecVariant, typename Result, typename ResultState>
     static CPPCODEC_ALWAYS_INLINE void block(Result&, ResultState&, const uint8_t*) { }
 
@@ -146,68 +149,250 @@ inline void stream_codec<Codec, CodecVariant>::encode(
     }
 }
 
+// Range & lookup table generation, see
+// http://stackoverflow.com/questions/13313980/populate-an-array-using-constexpr-at-compile-time
+// and http://cplusadd.blogspot.ca/2013/02/c11-compile-time-lookup-tablearray-with.html
+
+template<unsigned... Is> struct seq {};
+
+template<unsigned N, unsigned... Is>
+struct gen_seq : gen_seq<N - 4, N - 4, N - 3, N - 2, N - 1, Is...> {
+    // Clang up to 3.6 has a limit of 256 for template recursion,
+    // so pass a few more symbols at once to make it work.
+    static_assert(N % 4 == 0, "I must be divisible by 4 to eventually end at 0");
+};
+template<unsigned... Is>
+struct gen_seq<0, Is...> : seq<Is...> {};
+
+template <size_t N>
+struct lookup_table_t {
+    alphabet_index_t lookup[N];
+    static constexpr size_t size = N;
+};
+
+template<typename LambdaType, unsigned... Is>
+constexpr lookup_table_t<sizeof...(Is)> make_lookup_table(seq<Is...>, LambdaType value_for_index) {
+    return { { value_for_index(Is)... } };
+}
+
+template<unsigned N, typename LambdaType>
+constexpr lookup_table_t<N> make_lookup_table(LambdaType evalFunc) {
+    return make_lookup_table(gen_seq<N>(), evalFunc);
+}
+
+// CodecVariant::symbol() provides a symbol for an index.
+// Use recursive templates to get the inverse lookup table for fast decoding.
+
+template <typename T>
+static CPPCODEC_ALWAYS_INLINE constexpr size_t num_possible_values()
+{
+    return static_cast<size_t>(
+            static_cast<intmax_t>(std::numeric_limits<T>::max())
+                    - static_cast<intmax_t>(std::numeric_limits<T>::min()) + 1);
+}
+
+template <typename CodecVariant, alphabet_index_t InvalidIdx, size_t I>
+struct index_if_in_alphabet {
+    static CPPCODEC_ALWAYS_INLINE constexpr alphabet_index_t for_symbol(char symbol)
+    {
+        return (CodecVariant::symbol(
+                    static_cast<alphabet_index_t>(CodecVariant::alphabet_size() - I)) == symbol)
+            ? static_cast<alphabet_index_t>(CodecVariant::alphabet_size() - I)
+            : index_if_in_alphabet<CodecVariant, InvalidIdx, I - 1>::for_symbol(symbol);
+    }
+};
+template <typename CodecVariant, alphabet_index_t InvalidIdx>
+struct index_if_in_alphabet<CodecVariant, InvalidIdx, 0> { // terminating specialization
+    static CPPCODEC_ALWAYS_INLINE constexpr alphabet_index_t for_symbol(char symbol)
+    {
+        return InvalidIdx;
+    }
+};
+
+template <typename CodecVariant, size_t I>
+struct padding_searcher {
+    static CPPCODEC_ALWAYS_INLINE constexpr bool exists_padding_symbol()
+    {
+        // Clang up to 3.6 has a limit of 256 for template recursion,
+        // so pass a few more symbols at once to make it work.
+        static_assert(I % 4 == 0, "I must be divisible by 4 to eventually end at 0");
+
+        return CodecVariant::is_padding_symbol(
+                        static_cast<char>(num_possible_values<char>() - I - 4))
+                || CodecVariant::is_padding_symbol(
+                        static_cast<char>(num_possible_values<char>() - I - 3))
+                || CodecVariant::is_padding_symbol(
+                        static_cast<char>(num_possible_values<char>() - I - 2))
+                || CodecVariant::is_padding_symbol(
+                        static_cast<char>(num_possible_values<char>() - I - 1))
+                || padding_searcher<CodecVariant, I - 4>::exists_padding_symbol();
+    }
+};
+template <typename CodecVariant>
+struct padding_searcher<CodecVariant, 0> { // terminating specialization
+    static CPPCODEC_ALWAYS_INLINE constexpr bool exists_padding_symbol() { return false; }
+};
+
+template <typename CodecVariant>
+struct alphabet_index_info
+{
+    static constexpr const size_t num_possible_symbols = num_possible_values<char>();
+
+    static constexpr const alphabet_index_t padding_idx = 1 << 8;
+    static constexpr const alphabet_index_t invalid_idx = 1 << 9;
+    static constexpr const alphabet_index_t eof_idx = 1 << 10;
+    static constexpr const alphabet_index_t stop_character_mask = ~0xFF;
+
+    static constexpr const bool padding_allowed = padding_searcher<
+            CodecVariant, num_possible_symbols>::exists_padding_symbol();
+
+    static CPPCODEC_ALWAYS_INLINE constexpr bool allows_padding()
+    {
+        return padding_allowed;
+    }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding(alphabet_index_t idx)
+    {
+        return allows_padding() ? (idx == padding_idx) : false;
+    }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_invalid(alphabet_index_t idx) { return idx == invalid_idx; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof(alphabet_index_t idx) { return idx == eof_idx; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_stop_character(alphabet_index_t idx)
+    {
+        return (idx & stop_character_mask) != 0;
+    }
+
+private:
+    static CPPCODEC_ALWAYS_INLINE constexpr
+    alphabet_index_t valid_index_or(alphabet_index_t a, alphabet_index_t b)
+    {
+        return a == invalid_idx ? b : a;
+    }
+
+    using idx_if_in_alphabet = index_if_in_alphabet<
+            CodecVariant, invalid_idx, CodecVariant::alphabet_size()>;
+
+    static CPPCODEC_ALWAYS_INLINE constexpr alphabet_index_t index_of(char symbol)
+    {
+        return valid_index_or(idx_if_in_alphabet::for_symbol(symbol),
+            CodecVariant::is_eof_symbol(symbol) ? eof_idx
+            : CodecVariant::is_padding_symbol(symbol) ? padding_idx
+            : invalid_idx);
+    }
+
+    // GCC <= 4.9 has a bug with retaining constexpr when passing a function pointer.
+    // To get around this, we'll create a callable with operator() and pass that one.
+    // Unfortunately, MSVC prior to VS 2017 (for MinSizeRel or Release builds)
+    // chokes on this by compiling the project in 20 minutes instead of seconds.
+    // So let's define two separate variants and remove the old GCC one whenever we
+    // decide not to support GCC < 5.0 anymore.
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 5
+    struct index_at {
+        CPPCODEC_ALWAYS_INLINE constexpr alphabet_index_t operator()(size_t symbol) const {
+            return index_of(CodecVariant::normalized_symbol(static_cast<char>(symbol)));
+        }
+    };
+#else
+    static CPPCODEC_ALWAYS_INLINE constexpr alphabet_index_t index_at(size_t symbol)
+    {
+        return index_of(CodecVariant::normalized_symbol(static_cast<char>(symbol)));
+    }
+#endif
+
+public:
+    struct lookup {
+        static CPPCODEC_ALWAYS_INLINE alphabet_index_t for_symbol(char symbol)
+        {
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 5
+            static constexpr const auto t = make_lookup_table<num_possible_symbols>(index_at());
+#else
+            static constexpr const auto t = make_lookup_table<num_possible_symbols>(&index_at);
+#endif
+            static_assert(t.size == num_possible_symbols,
+                    "lookup table must cover each possible (character) symbol");
+            return t.lookup[static_cast<uint8_t>(symbol)];
+        }
+    };
+};
+
+//
+// At long last! The actual decode/encode functions.
+
 template <typename Codec, typename CodecVariant>
 template <typename Result, typename ResultState>
 inline void stream_codec<Codec, CodecVariant>::decode(
         Result& binary_result, ResultState& state,
         const char* src_encoded, size_t src_size)
 {
+    using alphabet_index_lookup = typename alphabet_index_info<CodecVariant>::lookup;
     const char* src = src_encoded;
     const char* src_end = src + src_size;
 
-    uint8_t idx[Codec::encoded_block_size()] = {};
-    uint8_t last_value_idx = 0;
+    alphabet_index_t alphabet_indexes[Codec::encoded_block_size()] = {};
+    alphabet_index_t current_alphabet_index = alphabet_index_info<CodecVariant>::eof_idx;
+    size_t current_block_index = 0;
 
     while (src < src_end) {
-        if (CodecVariant::should_ignore(idx[last_value_idx] = CodecVariant::index_of(*(src++)))) {
+        if (CodecVariant::should_ignore(*src)) {
+            ++src;
             continue;
         }
-        if (CodecVariant::is_special_character(idx[last_value_idx])) {
+        current_alphabet_index = alphabet_index_lookup::for_symbol(*src);
+        if (alphabet_index_info<CodecVariant>::is_stop_character(current_alphabet_index)) {
             break;
         }
+        ++src;
+        alphabet_indexes[current_block_index++] = current_alphabet_index;
 
-        ++last_value_idx;
-        if (last_value_idx == Codec::encoded_block_size()) {
-            Codec::decode_block(binary_result, state, idx);
-            last_value_idx = 0;
+        if (current_block_index == Codec::encoded_block_size()) {
+            Codec::decode_block(binary_result, state, alphabet_indexes);
+            current_block_index = 0;
         }
     }
 
-    uint8_t last_idx = last_value_idx;
-    if (CodecVariant::is_padding_symbol(idx[last_value_idx])) {
-        if (!last_value_idx) {
+    if (alphabet_index_info<CodecVariant>::is_invalid(current_alphabet_index)) {
+        throw symbol_error(*src);
+    }
+    ++src;
+
+    size_t last_block_index = current_block_index;
+    if (alphabet_index_info<CodecVariant>::is_padding(current_alphabet_index)) {
+        if (current_block_index == 0) {
             // Don't accept padding at the start of a block.
             // The encoder should have omitted that padding altogether.
             throw padding_error();
         }
         // We're in here because we just read a (first) padding character. Try to read more.
-        ++last_idx;
+        ++last_block_index;
         while (src < src_end) {
-            // Use idx[last_value_idx] to avoid declaring another uint8_t. It's unused now so that's okay.
-            if (CodecVariant::is_eof(idx[last_value_idx] = CodecVariant::index_of(*(src++)))) {
+            alphabet_index_t last_alphabet_index = alphabet_index_lookup::for_symbol(*(src++));
+
+            if (alphabet_index_info<CodecVariant>::is_eof(last_alphabet_index)) {
                 break;
             }
-            if (!CodecVariant::is_padding_symbol(idx[last_value_idx])) {
+            if (!alphabet_index_info<CodecVariant>::is_padding(last_alphabet_index)) {
                 throw padding_error();
             }
 
-            ++last_idx;
-            if (last_idx > Codec::encoded_block_size()) {
+            ++last_block_index;
+            if (last_block_index > Codec::encoded_block_size()) {
                 throw padding_error();
             }
         }
     }
 
-    if (last_idx)  {
-        if (CodecVariant::requires_padding() && last_idx != Codec::encoded_block_size()) {
+    if (last_block_index)  {
+        if ((CodecVariant::requires_padding()
+                    || alphabet_index_info<CodecVariant>::is_padding(current_alphabet_index)
+                    ) && last_block_index != Codec::encoded_block_size())
+        {
             // If the input is not a multiple of the block size then the input is incorrect.
             throw padding_error();
         }
-        if (last_value_idx >= Codec::encoded_block_size()) {
+        if (current_block_index >= Codec::encoded_block_size()) {
             abort();
             return;
         }
-        Codec::decode_tail(binary_result, state, idx, last_value_idx);
+        Codec::decode_tail(binary_result, state, alphabet_indexes, current_block_index);
     }
 }
 

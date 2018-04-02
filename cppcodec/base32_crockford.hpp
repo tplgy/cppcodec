@@ -39,46 +39,36 @@ static constexpr const char base32_crockford_alphabet[] = {
     'P', 'Q', 'R', 'S', 'T',                          // 27 - no U
     'V', 'W', 'X', 'Y', 'Z'                           // 32
 };
-static_assert(sizeof(base32_crockford_alphabet) == 32, "base32 alphabet must have 32 values");
 
 class base32_crockford_base
 {
 public:
+    static CPPCODEC_ALWAYS_INLINE constexpr size_t alphabet_size() {
+        static_assert(sizeof(base32_crockford_alphabet) == 32, "base32 alphabet must have 32 values");
+        return sizeof(base32_crockford_alphabet);
+    }
+    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(alphabet_index_t idx)
+    {
+        return base32_crockford_alphabet[idx];
+    }
+    static CPPCODEC_ALWAYS_INLINE constexpr char normalized_symbol(char c)
+    {
+        // Hex decoding is always case-insensitive (even in RFC 4648), the question
+        // is only for encoding whether to use upper-case or lower-case letters.
+        return (c == 'O' || c == 'o') ? '0'
+            : (c == 'I' || c == 'i' || c == 'L' || c == 'l') ? '1'
+            : (c >= 'a' && c <= 'z') ? (c - 'a' + 'A')
+            : c;
+    }
+
     static CPPCODEC_ALWAYS_INLINE constexpr bool generates_padding() { return false; }
     static CPPCODEC_ALWAYS_INLINE constexpr bool requires_padding() { return false; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(char /*c*/) { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(char c) { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof_symbol(char c) { return c == '\0'; }
 
-    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(uint8_t index)
-    {
-        return base32_crockford_alphabet[index];
+    static CPPCODEC_ALWAYS_INLINE constexpr bool should_ignore(char c) {
+        return c == '-'; // "Hyphens (-) can be inserted into strings [for readability]."
     }
-
-    static CPPCODEC_ALWAYS_INLINE constexpr uint8_t index_of(char c)
-    {
-        return (c >= '0' && c <= '9') ? (c - '0')
-                // upper-case letters
-                : (c >= 'A' && c <= 'H') ? (c - 'A' + 10) // no I
-                : (c >= 'J' && c <= 'K') ? (c - 'J' + 18) // no L
-                : (c >= 'M' && c <= 'N') ? (c - 'M' + 20) // no O
-                : (c >= 'P' && c <= 'T') ? (c - 'P' + 22) // no U
-                : (c >= 'V' && c <= 'Z') ? (c - 'V' + 27)
-                // lower-case letters
-                : (c >= 'a' && c <= 'h') ? (c - 'a' + 10) // no I
-                : (c >= 'j' && c <= 'k') ? (c - 'j' + 18) // no L
-                : (c >= 'm' && c <= 'n') ? (c - 'm' + 20) // no O
-                : (c >= 'p' && c <= 't') ? (c - 'p' + 22) // no U
-                : (c >= 'v' && c <= 'z') ? (c - 'v' + 27)
-                : (c == '-') ? 253 // "Hyphens (-) can be inserted into strings [for readability]."
-                : (c == '\0') ? 255 // stop at end of string
-                // special cases
-                : (c == 'O' || c == 'o') ? 0
-                : (c == 'I' || c == 'i' || c == 'L' || c == 'l') ? 1
-                : throw symbol_error(c);
-    }
-
-    static CPPCODEC_ALWAYS_INLINE constexpr bool should_ignore(uint8_t index) { return index == 253; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_special_character(uint8_t index) { return index > 32; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof(uint8_t index) { return index == 255; }
 };
 
 // base32_crockford is a concatenative iterative (i.e. streaming) interpretation of Crockford base32.
