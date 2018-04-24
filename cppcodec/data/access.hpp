@@ -27,7 +27,8 @@
 
 #include <stdint.h> // for size_t
 #include <string> // for static_assert() checking that string will be optimized
-#include <type_traits> // for std::enable_if and such
+#include <type_traits> // for std::enable_if, std::remove_reference, and such
+#include <utility> // for std::declval
 #include <vector> // for static_assert() checking that vector will be optimized
 
 #include "../detail/config.hpp" // for CPPCODEC_ALWAYS_INLINE
@@ -151,10 +152,18 @@ public:
         //.next resize(). In that light, resize from the start and
         // slightly reduce the size at the end if necessary.
         result.resize(capacity);
+
+        // result.data() may perform a calculation to retrieve the address.
+        // E.g. std::string (since C++11) will use small string optimization,
+        // so it needs to check if it's using allocated data or (ab)using
+        // its own member variables interpreted as char array.
+        // (This result_state is used for std::string starting with C++17.)
+        // Conditional code paths are slow so we only do it once, at the start.
+        m_buffer = result.data();
     }
     CPPCODEC_ALWAYS_INLINE void put(Result& result, char c)
     {
-        result.data()[m_offset++] = c;
+        m_buffer[m_offset++] = c;
     }
     CPPCODEC_ALWAYS_INLINE void finish(Result& result)
     {
@@ -165,6 +174,9 @@ public:
         return m_offset;
     }
 private:
+    // Make sure to get the mutable buffer decltype by using assignment.
+    typename std::remove_reference<
+            decltype(std::declval<Result>().data()[size_t(0)] = 'x')>::type* m_buffer;
     size_t m_offset = 0;
 };
 
