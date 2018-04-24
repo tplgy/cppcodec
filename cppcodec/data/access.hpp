@@ -264,16 +264,16 @@ CPPCODEC_ALWAYS_INLINE array_access_result_state<Result> create_state(Result&, s
     return array_access_result_state<Result>();
 }
 
-#if __cplusplus < 201703L
+#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG > 201703L)
+static_assert(std::is_same<
+    decltype(create_state(*(std::string*)nullptr, specific_t())),
+    direct_data_access_result_state<std::string>>::value,
+    "std::string (C++17 and later) must be handled by direct_data_access_result_state");
+#elif __cplusplus < 201703 && !defined(_MSVC_LANG) // we can't trust MSVC to set this right
 static_assert(std::is_same<
         decltype(create_state(*(std::string*)nullptr, specific_t())),
         array_access_result_state<std::string>>::value,
         "std::string (pre-C++17) must be handled by array_access_result_state");
-#else
-static_assert(std::is_same<
-        decltype(create_state(*(std::string*)nullptr, specific_t())),
-        direct_data_access_result_state<std::string>>::value,
-        "std::string (C++17 and later) must be handled by direct_data_access_result_state");
 #endif
 
 // Specialized init(), put() and finish() functions for array_access_result_state.
