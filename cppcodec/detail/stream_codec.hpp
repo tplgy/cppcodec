@@ -328,71 +328,78 @@ inline void stream_codec<Codec, CodecVariant>::decode(
     const char* src_end = src + src_size;
 
     alphabet_index_t alphabet_indexes[Codec::encoded_block_size()] = {};
-    alphabet_index_t current_alphabet_index = alphabet_index_info<CodecVariant>::eof_idx;
-    size_t current_block_index = 0;
+    alphabet_indexes[0] = alphabet_index_info<CodecVariant>::eof_idx;
+
+    alphabet_index_t* const alphabet_index_start = &alphabet_indexes[0];
+    alphabet_index_t* const alphabet_index_end = &alphabet_indexes[Codec::encoded_block_size()];
+    alphabet_index_t* alphabet_index_ptr = &alphabet_indexes[0];
 
     while (src < src_end) {
         if (CodecVariant::should_ignore(*src)) {
             ++src;
             continue;
         }
-        current_alphabet_index = alphabet_index_lookup::for_symbol(*src);
-        if (alphabet_index_info<CodecVariant>::is_stop_character(current_alphabet_index)) {
+        *alphabet_index_ptr = alphabet_index_lookup::for_symbol(*src);
+        if (alphabet_index_info<CodecVariant>::is_stop_character(*alphabet_index_ptr)) {
             break;
         }
         ++src;
-        alphabet_indexes[current_block_index++] = current_alphabet_index;
+        ++alphabet_index_ptr;
 
-        if (current_block_index == Codec::encoded_block_size()) {
+        if (alphabet_index_ptr == alphabet_index_end) {
             Codec::decode_block(binary_result, state, alphabet_indexes);
-            current_block_index = 0;
+            alphabet_index_ptr = alphabet_index_start;
         }
     }
 
-    if (alphabet_index_info<CodecVariant>::is_invalid(current_alphabet_index)) {
+    if (alphabet_index_info<CodecVariant>::is_invalid(*alphabet_index_ptr)) {
         throw symbol_error(*src);
     }
     ++src;
 
-    size_t last_block_index = current_block_index;
-    if (alphabet_index_info<CodecVariant>::is_padding(current_alphabet_index)) {
-        if (current_block_index == 0) {
+    alphabet_index_t* last_index_ptr = alphabet_index_ptr;
+    if (alphabet_index_info<CodecVariant>::is_padding(*last_index_ptr)) {
+        if (last_index_ptr == alphabet_index_start) {
             // Don't accept padding at the start of a block.
             // The encoder should have omitted that padding altogether.
             throw padding_error();
         }
         // We're in here because we just read a (first) padding character. Try to read more.
-        ++last_block_index;
+        // Count with last_index_ptr, but store in alphabet_index_ptr so we don't
+        // overflow the array in case the input data is too long.
+        ++last_index_ptr;
         while (src < src_end) {
-            alphabet_index_t last_alphabet_index = alphabet_index_lookup::for_symbol(*(src++));
+            *alphabet_index_ptr = alphabet_index_lookup::for_symbol(*(src++));
 
-            if (alphabet_index_info<CodecVariant>::is_eof(last_alphabet_index)) {
+            if (alphabet_index_info<CodecVariant>::is_eof(*alphabet_index_ptr)) {
+                *alphabet_index_ptr = alphabet_index_info<CodecVariant>::padding_idx;
                 break;
             }
-            if (!alphabet_index_info<CodecVariant>::is_padding(last_alphabet_index)) {
+            if (!alphabet_index_info<CodecVariant>::is_padding(*alphabet_index_ptr)) {
                 throw padding_error();
             }
 
-            ++last_block_index;
-            if (last_block_index > Codec::encoded_block_size()) {
+            ++last_index_ptr;
+            if (last_index_ptr > alphabet_index_end) {
                 throw padding_error();
             }
         }
     }
 
-    if (last_block_index)  {
+    if (last_index_ptr != alphabet_index_start)  {
         if ((CodecVariant::requires_padding()
-                    || alphabet_index_info<CodecVariant>::is_padding(current_alphabet_index)
-                    ) && last_block_index != Codec::encoded_block_size())
+                    || alphabet_index_info<CodecVariant>::is_padding(*alphabet_index_ptr)
+                    ) && last_index_ptr != alphabet_index_end)
         {
             // If the input is not a multiple of the block size then the input is incorrect.
             throw padding_error();
         }
-        if (current_block_index >= Codec::encoded_block_size()) {
+        if (alphabet_index_ptr >= alphabet_index_end) {
             abort();
             return;
         }
-        Codec::decode_tail(binary_result, state, alphabet_indexes, current_block_index);
+        Codec::decode_tail(binary_result, state, alphabet_indexes,
+                static_cast<size_t>(alphabet_index_ptr - alphabet_index_start));
     }
 }
 
