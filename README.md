@@ -7,6 +7,7 @@ and hex (a.k.a. base16) as specified in RFC 4648, plus Crockford's base32.
 
 MIT licensed with consistent, flexible API. Supports raw pointers,
 `std::string` and (templated) character vectors without unnecessary allocations.
+Cross-platform with measured decent performance and without compiler warnings.
 
 
 
