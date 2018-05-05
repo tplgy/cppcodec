@@ -40,39 +40,30 @@ static constexpr const char base64_url_alphabet[] = {
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'
 };
-static_assert(sizeof(base64_url_alphabet) == 64, "base64 alphabet must have 64 values");
 
 class base64_url
 {
 public:
     template <typename Codec> using codec_impl = stream_codec<Codec, base64_url>;
 
+    static CPPCODEC_ALWAYS_INLINE constexpr size_t alphabet_size() {
+        static_assert(sizeof(base64_url_alphabet) == 64, "base64 alphabet must have 64 values");
+        return sizeof(base64_url_alphabet);
+    }
+    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(alphabet_index_t idx)
+    {
+        return base64_url_alphabet[idx];
+    }
+    static CPPCODEC_ALWAYS_INLINE constexpr char normalized_symbol(char c) { return c; }
+
     static CPPCODEC_ALWAYS_INLINE constexpr bool generates_padding() { return true; }
     static CPPCODEC_ALWAYS_INLINE constexpr bool requires_padding() { return true; }
     static CPPCODEC_ALWAYS_INLINE constexpr char padding_symbol() { return '='; }
-
-    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(uint8_t index)
-    {
-        return base64_url_alphabet[index];
-    }
-
-    static CPPCODEC_ALWAYS_INLINE constexpr uint8_t index_of(char c)
-    {
-        return (c >= 'A' && c <= 'Z') ? (c - 'A')
-                : (c >= 'a' && c <= 'z') ? (c - 'a' + 26)
-                : (c >= '0' && c <= '9') ? (c - '0' + 52)
-                : (c == '-') ? (c - '-' + 62)
-                : (c == '_') ? (c - '_' + 63)
-                : (c == padding_symbol()) ? 254
-                : (c == '\0') ? 255 // stop at end of string
-                : throw symbol_error(c);
-    }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(char c) { return c == '='; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof_symbol(char c) { return c == '\0'; }
 
     // RFC4648 does not specify any whitespace being allowed in base64 encodings.
-    static CPPCODEC_ALWAYS_INLINE constexpr bool should_ignore(uint8_t /*index*/) { return false; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_special_character(uint8_t index) { return index > 64; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(uint8_t index) { return index == 254; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof(uint8_t index) { return index == 255; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool should_ignore(char) { return false; }
 };
 
 } // namespace detail

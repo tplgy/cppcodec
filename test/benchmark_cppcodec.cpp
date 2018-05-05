@@ -33,6 +33,10 @@
 #include <string>
 #include <vector>
 
+#define BENCHMARK_ENCODING_STR true
+#define BENCHMARK_DECODING_STR true
+#define BENCHMARK_DECODING_VEC_U8 true
+
 const size_t max_iterations = 1000000; // 1m iterations ought to be enough for anybody
 const size_t iteration_max_ms = 500; // half a second
 
@@ -66,11 +70,14 @@ void benchmark(std::ostream& stream, const std::vector<size_t>& decoded_sizes)
 
     auto flags = stream.flags();
     auto precision = stream.precision();
-    stream << std::fixed << std::setprecision(4)
-            << "Encoding:\n";
+    stream << std::fixed << std::setprecision(4);
+
+#if BENCHMARK_ENCODING_STR
+    stream << "Encoding:\n";
 
     for (size_t i = 0; i < decoded_sizes.size(); ++i) {
-        encoded_str[i] = std::string();
+        encoded_str[i] = Codec::encode(decoded_vec_u8[i]);
+
         clock::time_point start = clock::now();
         clock::time_point end = start + std::chrono::milliseconds(iteration_max_ms);
         size_t j = 0;
@@ -86,8 +93,16 @@ void benchmark(std::ostream& stream, const std::vector<size_t>& decoded_sizes)
         stream << (i == 0 ? "" : "\t") << decoded_sizes[i] << ": "
                 << time_encoding_str[i] << std::flush;
     }
+    stream << "\n";
+#else
+    // Even if we're not benchmarking encoding, we still need the encoded strings.
+    for (size_t i = 0; i < decoded_sizes.size(); ++i) {
+        encoded_str[i] = Codec::encode(decoded_vec_u8[i]);
+    }
+#endif // BENCHMARK_ENCODING_STR
 
-    stream << "\n" << "Decoding to string:\n";
+#if BENCHMARK_DECODING_STR
+    stream << "Decoding to string:\n";
 
     for (size_t i = 0; i < decoded_sizes.size(); ++i) {
         decoded_str[i] = std::string();
@@ -98,12 +113,7 @@ void benchmark(std::ostream& stream, const std::vector<size_t>& decoded_sizes)
             if (clock::now() > end) {
                 break;
             }
-#ifdef _MSC_VER
-            decoded_str[i] = Codec::decode<std::string>(encoded_str[i]);
-#else
-            decoded_str[i] =
-                    Codec::template decode<std::string>(encoded_str[i]);
-#endif
+            decoded_str[i] = Codec::template decode<std::string>(encoded_str[i]);
         }
         time_decoding_str[i] = std::chrono::duration_cast<std::chrono::microseconds>(
                 clock::now() - start).count() / static_cast<double>(j);
@@ -112,7 +122,11 @@ void benchmark(std::ostream& stream, const std::vector<size_t>& decoded_sizes)
                 << time_decoding_str[i] << std::flush;
     }
 
-    stream << "\n" << "Decoding to vector<uint8_t>:\n";
+    stream << "\n";
+#endif // BENCHMARK_DECODING_STR
+
+#if BENCHMARK_DECODING_VEC_U8
+    stream << "Decoding to vector<uint8_t>:\n";
 
     for (size_t i = 0; i < decoded_sizes.size(); ++i) {
         decoded_vec_u8[i] = std::vector<uint8_t>();
@@ -132,6 +146,9 @@ void benchmark(std::ostream& stream, const std::vector<size_t>& decoded_sizes)
                 << time_decoding_vec_u8[i] << std::flush;
     }
 
+    stream << "\n";
+#endif // BENCHMARK_DECODING_VEC_U8
+
     stream << std::setprecision(precision) << "\n";
     stream.flags(flags);
 }
@@ -141,7 +158,6 @@ int main(int argc, char *argv[])
     std::vector<size_t> decoded_sizes = {
         1, 4, 8, 16, 32, 64, 128, 256, 2048, 4096, 32768
     };
-
     std::cout << "base64_rfc4648: [decoded size: microseconds]\n";
     benchmark<cppcodec::base64_rfc4648>(std::cout, decoded_sizes);
     return 0;

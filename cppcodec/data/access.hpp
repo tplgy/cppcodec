@@ -27,7 +27,8 @@
 
 #include <stdint.h> // for size_t
 #include <string> // for static_assert() checking that string will be optimized
-#include <type_traits> // for std::enable_if and such
+#include <type_traits> // for std::enable_if, std::remove_reference, and such
+#include <utility> // for std::declval
 #include <vector> // for static_assert() checking that vector will be optimized
 
 #include "../detail/config.hpp" // for CPPCODEC_ALWAYS_INLINE
@@ -151,10 +152,18 @@ public:
         //.next resize(). In that light, resize from the start and
         // slightly reduce the size at the end if necessary.
         result.resize(capacity);
+
+        // result.data() may perform a calculation to retrieve the address.
+        // E.g. std::string (since C++11) will use small string optimization,
+        // so it needs to check if it's using allocated data or (ab)using
+        // its own member variables interpreted as char array.
+        // (This result_state is used for std::string starting with C++17.)
+        // Conditional code paths are slow so we only do it once, at the start.
+        m_buffer = result.data();
     }
     CPPCODEC_ALWAYS_INLINE void put(Result& result, char c)
     {
-        result.data()[m_offset++] = c;
+        m_buffer[m_offset++] = c;
     }
     CPPCODEC_ALWAYS_INLINE void finish(Result& result)
     {
@@ -165,6 +174,9 @@ public:
         return m_offset;
     }
 private:
+    // Make sure to get the mutable buffer decltype by using assignment.
+    typename std::remove_reference<
+            decltype(std::declval<Result>().data()[size_t(0)] = 'x')>::type* m_buffer;
     size_t m_offset = 0;
 };
 
@@ -264,16 +276,16 @@ CPPCODEC_ALWAYS_INLINE array_access_result_state<Result> create_state(Result&, s
     return array_access_result_state<Result>();
 }
 
-#if __cplusplus < 201703L
+#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG > 201703L)
+static_assert(std::is_same<
+    decltype(create_state(*(std::string*)nullptr, specific_t())),
+    direct_data_access_result_state<std::string>>::value,
+    "std::string (C++17 and later) must be handled by direct_data_access_result_state");
+#elif __cplusplus < 201703 && !defined(_MSVC_LANG) // we can't trust MSVC to set this right
 static_assert(std::is_same<
         decltype(create_state(*(std::string*)nullptr, specific_t())),
         array_access_result_state<std::string>>::value,
         "std::string (pre-C++17) must be handled by array_access_result_state");
-#else
-static_assert(std::is_same<
-        decltype(create_state(*(std::string*)nullptr, specific_t())),
-        direct_data_access_result_state<std::string>>::value,
-        "std::string (C++17 and later) must be handled by direct_data_access_result_state");
 #endif
 
 // Specialized init(), put() and finish() functions for array_access_result_state.

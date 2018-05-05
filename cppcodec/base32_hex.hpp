@@ -37,37 +37,34 @@ static constexpr const char base32_hex_alphabet[] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
     'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V'
 };
-static_assert(sizeof(base32_hex_alphabet) == 32, "base32 alphabet must have 32 values");
 
 class base32_hex
 {
 public:
     template <typename Codec> using codec_impl = stream_codec<Codec, base32_hex>;
 
+    static CPPCODEC_ALWAYS_INLINE constexpr size_t alphabet_size() {
+        static_assert(sizeof(base32_hex_alphabet) == 32, "base32 alphabet must have 32 values");
+        return sizeof(base32_hex_alphabet);
+    }
+    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(alphabet_index_t idx)
+    {
+        return base32_hex_alphabet[idx];
+    }
+    static CPPCODEC_ALWAYS_INLINE constexpr char normalized_symbol(char c)
+    {
+        // Lower-case letters are accepted, though not generally expected.
+        return (c >= 'a' && c <= 'v') ? (c - 'a' + 'A') : c;
+    }
+
     static CPPCODEC_ALWAYS_INLINE constexpr bool generates_padding() { return true; }
     static CPPCODEC_ALWAYS_INLINE constexpr bool requires_padding() { return true; }
     static CPPCODEC_ALWAYS_INLINE constexpr char padding_symbol() { return '='; }
-
-    static CPPCODEC_ALWAYS_INLINE constexpr char symbol(uint8_t index)
-    {
-        return base32_hex_alphabet[index];
-    }
-
-    static CPPCODEC_ALWAYS_INLINE constexpr uint8_t index_of(char c)
-    {
-        return (c >= '0' && c <= '9') ? (c - '0')
-                : (c >= 'A' && c <= 'V') ? (c - 'A' + 10)
-                : (c == padding_symbol()) ? 254
-                : (c == '\0') ? 255 // stop at end of string
-                : (c >= 'a' && c <= 'v') ? (c - 'a' + 10) // lower-case: not expected, but accepted
-                : throw symbol_error(c);
-    }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(char c) { return c == '='; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof_symbol(char c) { return c == '\0'; }
 
     // RFC4648 does not specify any whitespace being allowed in base32 encodings.
-    static CPPCODEC_ALWAYS_INLINE constexpr bool should_ignore(uint8_t /*index*/) { return false; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_special_character(uint8_t index) { return index > 32; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(uint8_t index) { return index == 254; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof(uint8_t index) { return index == 255; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool should_ignore(char) { return false; }
 };
 
 } // namespace detail

@@ -18,3 +18,5 @@ add_executable(test_cppcodec test_cppcodec.cpp)
 add_test(cppcodec test_cppcodec)
 
 add_executable(benchmark_cppcodec benchmark_cppcodec.cpp)
+
+add_executable(minimal_decode minimal_decode.cpp)

@@ -673,6 +673,9 @@ TEST_CASE("base64 (unpadded URL-safe)", "[base64][url_unpadded]") {
         REQUIRE(base64::decode<std::string>("Zm9vYmE=") == "fooba");
         REQUIRE(base64::decode<std::string>("Zm9vYmFy") == "foobar");
 
+        // Unpadded base64_url allows padding, but an incorrect number of padding characters is still wrong.
+        REQUIRE_THROWS_AS(base64::decode<std::string>("Zg="), cppcodec::padding_error);
+
         // Other test strings.
         REQUIRE(base64::decode<std::string>("MTIz") == "123");
         REQUIRE(base64::decode<std::string>("QUJD") == "ABC");
