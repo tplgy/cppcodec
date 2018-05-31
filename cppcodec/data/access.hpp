@@ -49,7 +49,7 @@ CPPCODEC_ALWAYS_INLINE size_t size(const T& t) { return t.size(); }
 
 template <typename T, size_t N>
 CPPCODEC_ALWAYS_INLINE constexpr size_t size(const T (&t)[N]) noexcept {
-    void(t);
+    (void)t;
     return N * sizeof(t[0]);
 }
 
