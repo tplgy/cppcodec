@@ -49,8 +49,7 @@ CPPCODEC_ALWAYS_INLINE size_t size(const T& t) { return t.size(); }
 
 template <typename T, size_t N>
 CPPCODEC_ALWAYS_INLINE constexpr size_t size(const T (&t)[N]) noexcept {
-    (void)t;
-    return N * sizeof(t[0]);
+    return (void)t, N * sizeof(t[0]);
 }
 
 class general_t {};
@@ -138,8 +137,7 @@ CPPCODEC_ALWAYS_INLINE void put(Result& result, empty_result_state&, uint8_t c)
 template <typename T>
 constexpr auto data_is_mutable(T* t) -> decltype(t->data()[size_t(0)] = 'x', bool())
 {
-    (void)t;
-    return true;
+    return (void)t, true;
 }
 constexpr bool data_is_mutable(...) { return false; }
 
