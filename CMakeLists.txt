@@ -19,7 +19,7 @@ if (MSVC)
   # MSVC will respect CMAKE_CXX_STANDARD for CMake >= 3.10 and MSVC >= 19.0.24215
   # (VS 2017 15.3). Older versions will use the compiler default, which should be
   # fine for anything except ancient MSVC versions.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 
