@@ -137,7 +137,7 @@ CPPCODEC_ALWAYS_INLINE void put(Result& result, empty_result_state&, uint8_t c)
 template <typename T>
 constexpr auto data_is_mutable(T* t) -> decltype(t->data()[size_t(0)] = 'x', bool())
 {
-    (t);
+    (void)t;
     return true;
 }
 constexpr bool data_is_mutable(...) { return false; }
@@ -232,7 +232,7 @@ CPPCODEC_ALWAYS_INLINE void finish(Result& result, direct_data_access_result_sta
 template <typename T>
 constexpr auto array_access_is_mutable(T* t) -> decltype((*t)[size_t(0)] = 'x', bool())
 {
-    (t);
+    (void)t;
     return true;
 }
 constexpr bool array_access_is_mutable(...) { return false; }
