@@ -161,7 +161,7 @@ public:
         // Conditional code paths are slow so we only do it once, at the start.
         m_buffer = result.data();
     }
-    CPPCODEC_ALWAYS_INLINE void put(Result& result, char c)
+    CPPCODEC_ALWAYS_INLINE void put(Result& /*result*/, char c)
     {
         m_buffer[m_offset++] = c;
     }
