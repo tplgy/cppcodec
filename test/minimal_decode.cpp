@@ -24,7 +24,7 @@
 #include <cppcodec/base64_rfc4648.hpp>
 #include <iostream>
 
-int main(int argc, char *argv[])
+int main()
 {
     constexpr const char encoded[] = { "YW55IGNhcm5hbCBwbGVhc3U=" };
     char decoded[cppcodec::base64_rfc4648::decoded_max_size(sizeof(encoded))];

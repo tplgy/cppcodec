@@ -68,14 +68,14 @@ public:
 
     template <uint8_t I>
     static CPPCODEC_ALWAYS_INLINE constexpr uint8_if<I == 0> index_last(
-            const uint8_t* b /*binary block*/) noexcept
+            const uint8_t* /*binary block*/) noexcept
     {
         return 0;
     }
 
     template <uint8_t I>
     static CPPCODEC_ALWAYS_INLINE uint8_if<I != 0> index_last(
-            const uint8_t* b /*binary block*/)
+            const uint8_t* /*binary block*/)
     {
         throw std::domain_error("invalid last encoding symbol index in a tail");
     }

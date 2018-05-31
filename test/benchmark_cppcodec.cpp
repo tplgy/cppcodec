@@ -153,7 +153,7 @@ void benchmark(std::ostream& stream, const std::vector<size_t>& decoded_sizes)
     stream.flags(flags);
 }
 
-int main(int argc, char *argv[])
+int main()
 {
     std::vector<size_t> decoded_sizes = {
         1, 4, 8, 16, 32, 64, 128, 256, 2048, 4096, 32768
