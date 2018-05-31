@@ -59,7 +59,7 @@ public:
     static CPPCODEC_ALWAYS_INLINE constexpr bool generates_padding() { return false; }
     // FIXME: doesn't require padding, but requires a multiple of the encoded block size (2)
     static CPPCODEC_ALWAYS_INLINE constexpr bool requires_padding() { return false; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(char c) { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(char /*c*/) { return false; }
     static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof_symbol(char c) { return c == '\0'; }
 
     // Sometimes hex strings include whitespace, but this variant forbids it.
