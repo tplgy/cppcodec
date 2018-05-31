@@ -231,8 +231,7 @@ CPPCODEC_ALWAYS_INLINE void finish(Result& result, direct_data_access_result_sta
 template <typename T>
 constexpr auto array_access_is_mutable(T* t) -> decltype((*t)[size_t(0)] = 'x', bool())
 {
-    (void)t;
-    return true;
+    return (void)t, true;
 }
 constexpr bool array_access_is_mutable(...) { return false; }
 
