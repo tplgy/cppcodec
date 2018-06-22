@@ -188,14 +188,14 @@ private:
 //       Have it here in the factory function instead.
 template <typename Result,
           typename = typename std::enable_if<
-                  data_is_mutable((Result*)nullptr)>::type>
+                  data_is_mutable(static_cast<Result*>(nullptr))>::type>
 CPPCODEC_ALWAYS_INLINE direct_data_access_result_state<Result> create_state(Result&, specific_t)
 {
     return direct_data_access_result_state<Result>();
 }
 
 static_assert(std::is_same<
-        decltype(create_state(*(std::vector<uint8_t>*)nullptr, specific_t())),
+        decltype(create_state(*static_cast<std::vector<uint8_t>*>(nullptr), specific_t())),
         direct_data_access_result_state<std::vector<uint8_t>>>::value,
         "std::vector<uint8_t> must be handled by direct_data_access_result_state");
 
@@ -269,8 +269,8 @@ private:
 //       Have it here in the factory function instead.
 template <typename Result,
           typename = typename std::enable_if<
-                  !data_is_mutable((Result*)nullptr) // no more than one template option
-                  && array_access_is_mutable((Result*)nullptr)>::type>
+                  !data_is_mutable(static_cast<Result*>(nullptr)) // no more than one template option
+                  && array_access_is_mutable(static_cast<Result*>(nullptr))>::type>
 CPPCODEC_ALWAYS_INLINE array_access_result_state<Result> create_state(Result&, specific_t)
 {
     return array_access_result_state<Result>();
@@ -278,12 +278,12 @@ CPPCODEC_ALWAYS_INLINE array_access_result_state<Result> create_state(Result&, s
 
 #if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG > 201703L)
 static_assert(std::is_same<
-    decltype(create_state(*(std::string*)nullptr, specific_t())),
+    decltype(create_state(*static_cast<std::string*>(nullptr), specific_t())),
     direct_data_access_result_state<std::string>>::value,
     "std::string (C++17 and later) must be handled by direct_data_access_result_state");
 #elif __cplusplus < 201703 && !defined(_MSVC_LANG) // we can't trust MSVC to set this right
 static_assert(std::is_same<
-        decltype(create_state(*(std::string*)nullptr, specific_t())),
+        decltype(create_state(*static_cast<std::string*>(nullptr), specific_t())),
         array_access_result_state<std::string>>::value,
         "std::string (pre-C++17) must be handled by array_access_result_state");
 #endif
