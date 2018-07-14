@@ -203,7 +203,7 @@ struct index_if_in_alphabet {
 };
 template <typename CodecVariant, alphabet_index_t InvalidIdx>
 struct index_if_in_alphabet<CodecVariant, InvalidIdx, 0> { // terminating specialization
-    static CPPCODEC_ALWAYS_INLINE constexpr alphabet_index_t for_symbol(char /*symbol*/)
+    static CPPCODEC_ALWAYS_INLINE constexpr alphabet_index_t for_symbol(char)
     {
         return InvalidIdx;
     }
