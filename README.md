@@ -26,32 +26,31 @@ Alternatively, you can install the headers and build extra tools/tests with CMak
 
 A number of codec variants exist for base64 and base32, defining different alphabets
 or specifying the use of padding and line breaks in different ways. cppcodec is designed
-to let you make a conscious choice about which one you're using, but assumes you will
-mostly stick to a single one.
+to let you make a conscious choice about which one you're using, see below for a list of variants.
 
-cppcodec's approach is to implement encoding/decoding algorithms in different namespaces
-(e.g. `cppcodec::base64_rfc4648`) and in addition to the natural headers, also offer
-convenience headers to define a shorthand alias (e.g. `base64`) for one of the variants.
+cppcodec's approach is to implement encoding/decoding algorithms in different classes for namespacing (e.g. `cppcodec::base64_rfc4648`), with classes and their associated header files named verbatim after the codec variants.
 
 Here is an expected standard use of cppcodec:
 
 ```C++
-#include <cppcodec/base32_default_crockford.hpp>
-#include <cppcodec/base64_default_rfc4648.hpp>
+#include <cppcodec/base32_crockford.hpp>
+#include <cppcodec/base64_rfc4648.hpp>
 #include <iostream>
 
 int main() {
-   std::vector<uint8_t> decoded = base64::decode("YW55IGNhcm5hbCBwbGVhc3VyZQ==");
-   std::cout << "decoded size (\"any carnal pleasure\"): " << decoded.size() << '\n';
-   std::cout << base32::encode(decoded) << std::endl; // "C5Q7J833C5S6WRBC41R6RSB1EDTQ4S8"
-   return 0;
+  using base32 = cppcodec::base32_crockford;
+  using base64 = cppcodec::base64_rfc4648;
+
+  std::vector<uint8_t> decoded = base64::decode("YW55IGNhcm5hbCBwbGVhc3VyZQ==");
+  std::cout << "decoded size (\"any carnal pleasure\"): " << decoded.size() << '\n';
+  std::cout << base32::encode(decoded) << std::endl; // "C5Q7J833C5S6WRBC41R6RSB1EDTQ4S8"
+  return 0;
 }
 ```
 
-If possible, avoid including "default" headers in other header files.
+(The prior example included "baseXX_default_*.h" includes, these are not recommended anymore and may eventually get deprecated.)
 
-Non-aliasing headers omit the "default" part, e.g. `<cppcodec/base64_rfc4648.hpp>`
-or `<cppcodec/hex_lower.hpp>`. Currently supported variants are:
+Currently supported codec variants are:
 
 ### base64
 
