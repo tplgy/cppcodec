@@ -34,12 +34,6 @@ Here are a number of things I'd like to do still:
   return a temporary raw_result_buffer instead of being passed down as itself,
   for use cases where both std::vector and raw pointer calls are in use.
 
-* Benchmark our performance against other libraries. We should be pretty fast
-  since cppcodec is avoiding unnecessary copies or object construction, but
-  we're also not doing any special vectorization or inline assembly. Plus it
-  would be nice to know that the compiler optimizes the inline function calls
-  well, instead of merely assuming it.
-
 * More codec variants:
   * binary - useful for debugging
   * octal
