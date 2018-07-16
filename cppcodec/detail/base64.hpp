@@ -80,7 +80,7 @@ public:
 
     template <uint8_t I>
     static CPPCODEC_ALWAYS_INLINE uint8_if<I != 1 && I != 2> index_last(
-            const uint8_t* b /*binary block*/)
+            const uint8_t* /*binary block*/)
     {
         throw std::domain_error("invalid last encoding symbol index in a tail");
     }
