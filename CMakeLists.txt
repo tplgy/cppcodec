@@ -21,7 +21,7 @@ if (MSVC)
   # fine for anything except ancient MSVC versions.
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 
   # CMake versions before 3.1 do not understand CMAKE_CXX_STANDARD.
   # Remove this block once CMake >=3.1 has fixated in the ecosystem.

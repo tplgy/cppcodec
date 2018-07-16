@@ -63,7 +63,7 @@ public:
 
     static CPPCODEC_ALWAYS_INLINE constexpr bool generates_padding() { return false; }
     static CPPCODEC_ALWAYS_INLINE constexpr bool requires_padding() { return false; }
-    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(char /*c*/) { return false; }
+    static CPPCODEC_ALWAYS_INLINE constexpr bool is_padding_symbol(char) { return false; }
     static CPPCODEC_ALWAYS_INLINE constexpr bool is_eof_symbol(char c) { return c == '\0'; }
 
     static CPPCODEC_ALWAYS_INLINE constexpr bool should_ignore(char c) {
