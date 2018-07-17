@@ -125,16 +125,16 @@ TEST_CASE("Douglas Crockford's base32", "[base32][crockford]") {
         REQUIRE(base32::decode<std::string>("-C-SQ--PY-") == "foo");
 
         // An invalid number of symbols should throw the right kind of parse_error.
-        REQUIRE_THROWS_AS(base32::decode("0"), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base32::decode("000"), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base32::decode("000000"), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base32::decode("000000000"), cppcodec::invalid_input_length);
+        REQUIRE_THROWS_AS(base32::decode("0"), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000"), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000000"), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000000000"), const cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
-        REQUIRE_THROWS_AS(base32::decode("00======"), cppcodec::symbol_error); // no padding for Crockford
-        REQUIRE_THROWS_AS(base32::decode("Uu"), cppcodec::symbol_error); // only a checksum symbol here
-        REQUIRE_THROWS_AS(base32::decode("++"), cppcodec::symbol_error); // make sure it's not base64
-        REQUIRE_THROWS_AS(base32::decode("//"), cppcodec::symbol_error); // ...ditto
+        REQUIRE_THROWS_AS(base32::decode("00======"), const cppcodec::symbol_error&); // no padding for Crockford
+        REQUIRE_THROWS_AS(base32::decode("Uu"), const cppcodec::symbol_error&); // only a checksum symbol here
+        REQUIRE_THROWS_AS(base32::decode("++"), const cppcodec::symbol_error&); // make sure it's not base64
+        REQUIRE_THROWS_AS(base32::decode("//"), const cppcodec::symbol_error&); // ...ditto
     }
 
     // Only test overloads once (for base32_crockford, since it happens to be the first one).
@@ -324,20 +324,20 @@ TEST_CASE("base32hex", "[base32][hex]") {
         REQUIRE(base32::decode<std::string>("cPnMuOj1") == "fooba");
 
         // An invalid number of symbols should throw the right kind of parse_error.
-        REQUIRE_THROWS_AS(base32::decode("0"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base32::decode("00"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base32::decode("00==="), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base32::decode("0======="), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base32::decode("000====="), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base32::decode("000000=="), cppcodec::invalid_input_length);
+        REQUIRE_THROWS_AS(base32::decode("0"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base32::decode("00"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base32::decode("00==="), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base32::decode("0======="), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000====="), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("000000=="), const cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
-        REQUIRE_THROWS_AS(base32::decode("W0======"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base32::decode("X0======"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base32::decode("Y0======"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base32::decode("Z0======"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base32::decode("CPNM UOJ1"), cppcodec::symbol_error); // no spaces
-        REQUIRE_THROWS_AS(base32::decode("CPNM-UOJ1"), cppcodec::symbol_error); // no dashes
+        REQUIRE_THROWS_AS(base32::decode("W0======"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("X0======"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("Y0======"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("Z0======"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("CPNM UOJ1"), const cppcodec::symbol_error&); // no spaces
+        REQUIRE_THROWS_AS(base32::decode("CPNM-UOJ1"), const cppcodec::symbol_error&); // no dashes
     }
 }
 
@@ -431,20 +431,20 @@ TEST_CASE("base32 (RFC 4648)", "[base32][rfc4648]") {
         REQUIRE(base32::decode<std::string>("mZxW6yTb") == "fooba");
 
         // An invalid number of symbols should throw the right kind of parse_error.
-        REQUIRE_THROWS_AS(base32::decode("A"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base32::decode("AA"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base32::decode("AA==="), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base32::decode("A======="), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base32::decode("AAA====="), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base32::decode("AAAAAA=="), cppcodec::invalid_input_length);
+        REQUIRE_THROWS_AS(base32::decode("A"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base32::decode("AA"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base32::decode("AA==="), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base32::decode("A======="), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("AAA====="), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base32::decode("AAAAAA=="), const cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
-        REQUIRE_THROWS_AS(base32::decode("0A======"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base32::decode("1A======"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base32::decode("8A======"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base32::decode("9A======"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base32::decode("GEZD GNBV"), cppcodec::symbol_error); // no spaces
-        REQUIRE_THROWS_AS(base32::decode("GEZD-GNBV"), cppcodec::symbol_error); // no dashes
+        REQUIRE_THROWS_AS(base32::decode("0A======"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("1A======"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("8A======"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("9A======"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base32::decode("GEZD GNBV"), const cppcodec::symbol_error&); // no spaces
+        REQUIRE_THROWS_AS(base32::decode("GEZD-GNBV"), const cppcodec::symbol_error&); // no dashes
     }
 }
 
@@ -571,17 +571,17 @@ TEST_CASE("base64 (RFC 4648)", "[base64][rfc4648]") {
         REQUIRE(base64::decode("////") == std::vector<uint8_t>({255, 255, 255}));
 
         // An invalid number of symbols should throw the right kind of parse_error.
-        REQUIRE_THROWS_AS(base64::decode("A"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base64::decode("AA"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base64::decode("ABCDE"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base64::decode("A==="), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base64::decode("AAAA===="), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base64::decode("AAAAA==="), cppcodec::invalid_input_length);
+        REQUIRE_THROWS_AS(base64::decode("A"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("AA"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("ABCDE"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("A==="), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base64::decode("AAAA===="), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base64::decode("AAAAA==="), const cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
-        REQUIRE_THROWS_AS(base64::decode("A&B="), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base64::decode("--"), cppcodec::symbol_error); // this is not base64url
-        REQUIRE_THROWS_AS(base64::decode("__"), cppcodec::symbol_error); // ...ditto
+        REQUIRE_THROWS_AS(base64::decode("A&B="), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base64::decode("--"), const cppcodec::symbol_error&); // this is not base64url
+        REQUIRE_THROWS_AS(base64::decode("__"), const cppcodec::symbol_error&); // ...ditto
     }
 }
 
@@ -674,7 +674,7 @@ TEST_CASE("base64 (unpadded URL-safe)", "[base64][url_unpadded]") {
         REQUIRE(base64::decode<std::string>("Zm9vYmFy") == "foobar");
 
         // Unpadded base64_url allows padding, but an incorrect number of padding characters is still wrong.
-        REQUIRE_THROWS_AS(base64::decode<std::string>("Zg="), cppcodec::padding_error);
+        REQUIRE_THROWS_AS(base64::decode<std::string>("Zg="), const cppcodec::padding_error&);
 
         // Other test strings.
         REQUIRE(base64::decode<std::string>("MTIz") == "123");
@@ -682,13 +682,13 @@ TEST_CASE("base64 (unpadded URL-safe)", "[base64][url_unpadded]") {
         REQUIRE(base64::decode("____") == std::vector<uint8_t>({255, 255, 255}));
 
         // An invalid number of symbols should throw the right kind of parse_error.
-        REQUIRE_THROWS_AS(base64::decode("A"), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base64::decode("AAAAA"), cppcodec::invalid_input_length);
+        REQUIRE_THROWS_AS(base64::decode("A"), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base64::decode("AAAAA"), const cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
-        REQUIRE_THROWS_AS(base64::decode("A&B"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base64::decode("++"), cppcodec::symbol_error); // this is not standard base64
-        REQUIRE_THROWS_AS(base64::decode("//"), cppcodec::symbol_error); // ...ditto
+        REQUIRE_THROWS_AS(base64::decode("A&B"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base64::decode("++"), const cppcodec::symbol_error&); // this is not standard base64
+        REQUIRE_THROWS_AS(base64::decode("//"), const cppcodec::symbol_error&); // ...ditto
     }
 }
 
@@ -782,17 +782,17 @@ TEST_CASE("base64 (URL-safe)", "[base64][url]") {
         REQUIRE(base64::decode("____") == std::vector<uint8_t>({255, 255, 255}));
 
         // An invalid number of symbols should throw the right kind of parse_error.
-        REQUIRE_THROWS_AS(base64::decode("A"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base64::decode("AA"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base64::decode("ABCDE"), cppcodec::padding_error);
-        REQUIRE_THROWS_AS(base64::decode("A==="), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base64::decode("AAAA===="), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(base64::decode("AAAAA==="), cppcodec::invalid_input_length);
+        REQUIRE_THROWS_AS(base64::decode("A"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("AA"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("ABCDE"), const cppcodec::padding_error&);
+        REQUIRE_THROWS_AS(base64::decode("A==="), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base64::decode("AAAA===="), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(base64::decode("AAAAA==="), const cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
-        REQUIRE_THROWS_AS(base64::decode("A&B="), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(base64::decode("++"), cppcodec::symbol_error); // this is not standard base64
-        REQUIRE_THROWS_AS(base64::decode("//"), cppcodec::symbol_error); // ...ditto
+        REQUIRE_THROWS_AS(base64::decode("A&B="), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(base64::decode("++"), const cppcodec::symbol_error&); // this is not standard base64
+        REQUIRE_THROWS_AS(base64::decode("//"), const cppcodec::symbol_error&); // ...ditto
     }
 }
 
@@ -883,13 +883,13 @@ TEST_CASE("hex (lowercase)", "[hex][lower]") {
         REQUIRE(hex::decode<std::string>("666F6f6261") == "fooba");
 
         // An invalid number of symbols should throw the right kind of parse_error.
-        REQUIRE_THROWS_AS(hex::decode("0"), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(hex::decode("000"), cppcodec::invalid_input_length);
+        REQUIRE_THROWS_AS(hex::decode("0"), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(hex::decode("000"), const cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
-        REQUIRE_THROWS_AS(hex::decode("1g"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(hex::decode("66 6f"), cppcodec::symbol_error); // no spaces
-        REQUIRE_THROWS_AS(hex::decode("66-6f"), cppcodec::symbol_error); // no dashes
+        REQUIRE_THROWS_AS(hex::decode("1g"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(hex::decode("66 6f"), const cppcodec::symbol_error&); // no spaces
+        REQUIRE_THROWS_AS(hex::decode("66-6f"), const cppcodec::symbol_error&); // no dashes
     }
 }
 
@@ -980,12 +980,12 @@ TEST_CASE("hex (uppercase)", "[hex][upper]") {
         REQUIRE(hex::decode<std::string>("666f6F6261") == "fooba");
 
         // An invalid number of symbols should throw the right kind of parse_error.
-        REQUIRE_THROWS_AS(hex::decode("0"), cppcodec::invalid_input_length);
-        REQUIRE_THROWS_AS(hex::decode("000"), cppcodec::invalid_input_length);
+        REQUIRE_THROWS_AS(hex::decode("0"), const cppcodec::invalid_input_length&);
+        REQUIRE_THROWS_AS(hex::decode("000"), const cppcodec::invalid_input_length&);
 
         // An invalid symbol should throw a symbol error.
-        REQUIRE_THROWS_AS(hex::decode("1G"), cppcodec::symbol_error);
-        REQUIRE_THROWS_AS(hex::decode("66 6F"), cppcodec::symbol_error); // no spaces
-        REQUIRE_THROWS_AS(hex::decode("66-6F"), cppcodec::symbol_error); // no dashes
+        REQUIRE_THROWS_AS(hex::decode("1G"), const cppcodec::symbol_error&);
+        REQUIRE_THROWS_AS(hex::decode("66 6F"), const cppcodec::symbol_error&); // no spaces
+        REQUIRE_THROWS_AS(hex::decode("66-6F"), const cppcodec::symbol_error&); // no dashes
     }
 }
