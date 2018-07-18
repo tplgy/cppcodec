@@ -115,6 +115,27 @@ communicated via phone.
 
 
 
+# Philosophy and trade-offs
+
+cppcodec aims to support a range of codecs using a shared template-based implementation.
+The focus is on a high-quality API that encourages correct use, includes error handling,
+and is easy to adopt into other codebases. As a header-only library, cppcodec can
+ship implementations of several codecs and variants while only compiling the ones
+that you actually use.
+
+Good performance is a goal, but not the topmost priority. In theory, templates allows
+to write generic code that is optimized for each specialization individually; however,
+in practice compilers still struggle to produce code that's as simple as a
+hand-written specialized function. On release builds, depending on the C++ compiler,
+cppcodec runs in between (approx.) 100% and 300% of time compared to "regular" optimized
+base64 implementations. Both are beat by highly optimized implementations that use
+vector instructions (such as [this](https://github.com/aklomp/base64)) or buy better
+performance with larger pre-computed tables (such as Chrome's base64 implementation).
+Debug builds of cppcodec are slower by an order of magnitude due to the use of templates
+and abstractions; make sure you use release or minimum-size builds in production.
+
+
+
 # API
 
 All codecs expose the same API. In the below documentation, replace `<codec>` with a
