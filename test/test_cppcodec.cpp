@@ -28,6 +28,7 @@
 #include <cppcodec/base32_hex.hpp>
 #include <cppcodec/base32_rfc4648.hpp>
 #include <cppcodec/base64_rfc4648.hpp>
+#include <cppcodec/base64_rfc4648_unpadded.hpp>
 #include <cppcodec/base64_url.hpp>
 #include <cppcodec/base64_url_unpadded.hpp>
 #include <cppcodec/hex_lower.hpp>
@@ -445,6 +446,139 @@ TEST_CASE("base32 (RFC 4648)", "[base32][rfc4648]") {
         REQUIRE_THROWS_AS(base32::decode("9A======"), const cppcodec::symbol_error&);
         REQUIRE_THROWS_AS(base32::decode("GEZD GNBV"), const cppcodec::symbol_error&); // no spaces
         REQUIRE_THROWS_AS(base32::decode("GEZD-GNBV"), const cppcodec::symbol_error&); // no dashes
+    }
+}
+
+TEST_CASE("base64 (unpadded RFC 4648)", "[base64][rfc4648_unpadded]") {
+    using base64 = cppcodec::base64_rfc4648_unpadded;
+
+    SECTION("encoded size calculation") {
+        REQUIRE(base64::encoded_size(0) == 0);
+        REQUIRE(base64::encoded_size(1) == 2);
+        REQUIRE(base64::encoded_size(2) == 3);
+        REQUIRE(base64::encoded_size(3) == 4);
+        REQUIRE(base64::encoded_size(4) == 6);
+        REQUIRE(base64::encoded_size(5) == 7);
+        REQUIRE(base64::encoded_size(6) == 8);
+        REQUIRE(base64::encoded_size(7) == 10);
+        REQUIRE(base64::encoded_size(12) == 16);
+    }
+
+    SECTION("maximum decoded size calculation") {
+        REQUIRE(base64::decoded_max_size(0) == 0);
+        REQUIRE(base64::decoded_max_size(1) == 0);
+        REQUIRE(base64::decoded_max_size(2) == 1);
+        REQUIRE(base64::decoded_max_size(3) == 2);
+        REQUIRE(base64::decoded_max_size(4) == 3);
+        REQUIRE(base64::decoded_max_size(5) == 3);
+        REQUIRE(base64::decoded_max_size(6) == 4);
+        REQUIRE(base64::decoded_max_size(7) == 5);
+        REQUIRE(base64::decoded_max_size(8) == 6);
+        REQUIRE(base64::decoded_max_size(9) == 6);
+        REQUIRE(base64::decoded_max_size(10) == 7);
+        REQUIRE(base64::decoded_max_size(11) == 8);
+        REQUIRE(base64::decoded_max_size(12) == 9);
+        REQUIRE(base64::decoded_max_size(16) == 12);
+    }
+
+    SECTION("encoding data") {
+        REQUIRE(base64::encode(std::vector<uint8_t>()) == "");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0})) == "AA");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0})) == "AAA");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0, 0})) == "AAAA");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0, 0, 0})) == "AAAAAA");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0, 0, 0, 0})) == "AAAAAAA");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0, 0, 0, 0, 0, 0})) == "AAAAAAAA");
+
+        // Constructing an std::string reduces the size of the char array by one (null terminator).
+        // Therefore, the result for passing the string literal directly ends up encoding
+        // one more character, which produces two more symbols in this particular case.
+        REQUIRE(base64::encode(std::string("Man")) == "TWFu");
+        REQUIRE(base64::encode("Man") == "TWFuAA");
+
+        // Wikipedia
+        REQUIRE(base64::encode(std::string("pleasure.")) == "cGxlYXN1cmUu");
+        REQUIRE(base64::encode(std::string("leasure.")) == "bGVhc3VyZS4");
+        REQUIRE(base64::encode(std::string("easure.")) == "ZWFzdXJlLg");
+        REQUIRE(base64::encode(std::string("asure.")) == "YXN1cmUu");
+        REQUIRE(base64::encode(std::string("sure.")) == "c3VyZS4");
+
+        REQUIRE(base64::encode(std::string("any carnal pleas")) == "YW55IGNhcm5hbCBwbGVhcw");
+        REQUIRE(base64::encode(std::string("any carnal pleasu")) == "YW55IGNhcm5hbCBwbGVhc3U");
+        REQUIRE(base64::encode(std::string("any carnal pleasur")) == "YW55IGNhcm5hbCBwbGVhc3Vy");
+
+        // RFC 4648: 9. Illustrations and Examples, adapted for more special characters
+        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9, 0x7E})) == "FPu/A9l+");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9})) == "FPu/A9k");
+        REQUIRE(base64::encode(std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03})) == "FPu/Aw");
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(base64::encode(std::string("")) == "");
+        REQUIRE(base64::encode(std::string("f")) == "Zg");
+        REQUIRE(base64::encode(std::string("fo")) == "Zm8");
+        REQUIRE(base64::encode(std::string("foo")) == "Zm9v");
+        REQUIRE(base64::encode(std::string("foob")) == "Zm9vYg");
+        REQUIRE(base64::encode(std::string("fooba")) == "Zm9vYmE");
+        REQUIRE(base64::encode(std::string("foobar")) == "Zm9vYmFy");
+
+        // Other test strings.
+        REQUIRE(base64::encode(std::string("123")) == "MTIz");
+        REQUIRE(base64::encode(std::string("ABC")) == "QUJD");
+        REQUIRE(base64::encode(std::string("\xFF\xFF\xFF")) == "////");
+    }
+
+    SECTION("decoding data") {
+        REQUIRE(base64::decode("") == std::vector<uint8_t>());
+        REQUIRE(base64::decode("AA") == std::vector<uint8_t>({0}));
+        REQUIRE(base64::decode("AAA") == std::vector<uint8_t>({0, 0}));
+        REQUIRE(base64::decode("AAAA") == std::vector<uint8_t>({0, 0, 0}));
+        REQUIRE(base64::decode("AAAAAA") == std::vector<uint8_t>({0, 0, 0, 0}));
+        REQUIRE(base64::decode("AAAAAAA") == std::vector<uint8_t>({0, 0, 0, 0, 0}));
+        REQUIRE(base64::decode("AAAAAAAA") == std::vector<uint8_t>({0, 0, 0, 0, 0, 0}));
+
+        // For decoding data, the result should be the same whether or not there is
+        // a null terminator at the end, because the input is a string (not binary array).
+        REQUIRE(base64::decode<std::string>(std::string("TWFu")) == "Man");
+        REQUIRE(base64::decode<std::string>("TWFu") == "Man");
+
+        // Wikipedia
+        REQUIRE(base64::decode<std::string>("cGxlYXN1cmUu") == "pleasure.");
+        REQUIRE(base64::decode<std::string>("bGVhc3VyZS4") == "leasure.");
+        REQUIRE(base64::decode<std::string>("ZWFzdXJlLg") == "easure.");
+        REQUIRE(base64::decode<std::string>("YXN1cmUu") == "asure.");
+        REQUIRE(base64::decode<std::string>("c3VyZS4") == "sure.");
+
+        REQUIRE(base64::decode<std::string>("YW55IGNhcm5hbCBwbGVhcw") == "any carnal pleas");
+        REQUIRE(base64::decode<std::string>("YW55IGNhcm5hbCBwbGVhc3U") == "any carnal pleasu");
+        REQUIRE(base64::decode<std::string>("YW55IGNhcm5hbCBwbGVhc3Vy") == "any carnal pleasur");
+
+        // RFC 4648: 9. Illustrations and Examples, adapted for more special characters
+        REQUIRE(base64::decode("FPu/A9l+") == std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9, 0x7E}));
+        REQUIRE(base64::decode("FPu/A9k") == std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03, 0xD9}));
+        REQUIRE(base64::decode("FPu/Aw") == std::vector<uint8_t>({0x14, 0xFB, 0xBF, 0x03}));
+
+        // RFC 4648: 10. Test Vectors
+        REQUIRE(base64::decode<std::string>("") == "");
+        REQUIRE(base64::decode<std::string>("Zg") == "f");
+        REQUIRE(base64::decode<std::string>("Zm8") == "fo");
+        REQUIRE(base64::decode<std::string>("Zm9v") == "foo");
+        REQUIRE(base64::decode<std::string>("Zm9vYg") == "foob");
+        REQUIRE(base64::decode<std::string>("Zm9vYmE") == "fooba");
+        REQUIRE(base64::decode<std::string>("Zm9vYmFy") == "foobar");
+
+        // Other test strings.
+        REQUIRE(base64::decode<std::string>("MTIz") == "123");
+        REQUIRE(base64::decode<std::string>("QUJD") == "ABC");
+        REQUIRE(base64::decode("////") == std::vector<uint8_t>({255, 255, 255}));
+
+        // An invalid number of symbols should throw the right kind of parse_error.
+        REQUIRE_THROWS_AS(base64::decode("A"), cppcodec::invalid_input_length);
+        REQUIRE_THROWS_AS(base64::decode("AAAAA"), cppcodec::invalid_input_length);
+
+        // An invalid symbol should throw a symbol error.
+        REQUIRE_THROWS_AS(base64::decode("A&B"), cppcodec::symbol_error);
+        REQUIRE_THROWS_AS(base64::decode("--"), cppcodec::symbol_error); // this is not base64url
+        REQUIRE_THROWS_AS(base64::decode("__"), cppcodec::symbol_error); // ...ditto
     }
 }
 
