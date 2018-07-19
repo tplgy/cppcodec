@@ -26,32 +26,31 @@ Alternatively, you can install the headers and build extra tools/tests with CMak
 
 A number of codec variants exist for base64 and base32, defining different alphabets
 or specifying the use of padding and line breaks in different ways. cppcodec is designed
-to let you make a conscious choice about which one you're using, but assumes you will
-mostly stick to a single one.
+to let you make a conscious choice about which one you're using, see below for a list of variants.
 
-cppcodec's approach is to implement encoding/decoding algorithms in different namespaces
-(e.g. `cppcodec::base64_rfc4648`) and in addition to the natural headers, also offer
-convenience headers to define a shorthand alias (e.g. `base64`) for one of the variants.
+cppcodec's approach is to implement encoding/decoding algorithms in different classes for namespacing (e.g. `cppcodec::base64_rfc4648`), with classes and their associated header files named verbatim after the codec variants.
 
 Here is an expected standard use of cppcodec:
 
 ```C++
-#include <cppcodec/base32_default_crockford.hpp>
-#include <cppcodec/base64_default_rfc4648.hpp>
+#include <cppcodec/base32_crockford.hpp>
+#include <cppcodec/base64_rfc4648.hpp>
 #include <iostream>
 
 int main() {
-   std::vector<uint8_t> decoded = base64::decode("YW55IGNhcm5hbCBwbGVhc3VyZQ==");
-   std::cout << "decoded size (\"any carnal pleasure\"): " << decoded.size() << '\n';
-   std::cout << base32::encode(decoded) << std::endl; // "C5Q7J833C5S6WRBC41R6RSB1EDTQ4S8"
-   return 0;
+  using base32 = cppcodec::base32_crockford;
+  using base64 = cppcodec::base64_rfc4648;
+
+  std::vector<uint8_t> decoded = base64::decode("YW55IGNhcm5hbCBwbGVhc3VyZQ==");
+  std::cout << "decoded size (\"any carnal pleasure\"): " << decoded.size() << '\n';
+  std::cout << base32::encode(decoded) << std::endl; // "C5Q7J833C5S6WRBC41R6RSB1EDTQ4S8"
+  return 0;
 }
 ```
 
-If possible, avoid including "default" headers in other header files.
+(The prior example included "baseXX_default_*.h" includes, these are not recommended anymore and may eventually get deprecated.)
 
-Non-aliasing headers omit the "default" part, e.g. `<cppcodec/base64_rfc4648.hpp>`
-or `<cppcodec/hex_lower.hpp>`. Currently supported variants are:
+Currently supported codec variants are:
 
 ### base64
 
@@ -113,6 +112,27 @@ communicated via phone.
 * `hex_lower` outputs lower-case letters and accepts upper-case as well.
   Similar to `hex_upper`, it's stream-based (no odd symbol lengths) and does
   not deal with "0x" prefixes.
+
+
+
+# Philosophy and trade-offs
+
+cppcodec aims to support a range of codecs using a shared template-based implementation.
+The focus is on a high-quality API that encourages correct use, includes error handling,
+and is easy to adopt into other codebases. As a header-only library, cppcodec can
+ship implementations of several codecs and variants while only compiling the ones
+that you actually use.
+
+Good performance is a goal, but not the topmost priority. In theory, templates allows
+to write generic code that is optimized for each specialization individually; however,
+in practice compilers still struggle to produce code that's as simple as a
+hand-written specialized function. On release builds, depending on the C++ compiler,
+cppcodec runs in between (approx.) 100% and 300% of time compared to "regular" optimized
+base64 implementations. Both are beat by highly optimized implementations that use
+vector instructions (such as [this](https://github.com/aklomp/base64)) or buy better
+performance with larger pre-computed tables (such as Chrome's base64 implementation).
+Debug builds of cppcodec are slower by an order of magnitude due to the use of templates
+and abstractions; make sure you use release or minimum-size builds in production.
 
 
 

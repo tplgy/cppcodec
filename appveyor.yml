@@ -6,6 +6,12 @@ branches:
 
 clone_depth: 1
 
+# Build configurations, for MSBuild as well as ctest.
+configuration:
+  - Release
+  - MinSizeRel
+  - Debug
+
 os:
   - Visual Studio 2015
   - Visual Studio 2017
@@ -13,27 +19,26 @@ os:
 # Win32 and x64 are CMake-compatible solution platform names.
 # This allows us to pass %PLATFORM% to cmake -A.
 platform:
-  - Win32
   - x64
-
-# Build configurations, for MSBuild as well as ctest.
-configuration:
-  - Debug
-  - Release
-  - MinSizeRel
+  - Win32
 
 matrix:
   exclude:
-  - os: Visual Studio 2017
+  - os: Visual Studio 2015
     platform: x64
-    configuration: Debug
+    configuration: MinSizeRel
   - os: Visual Studio 2015
     platform: Win32
     configuration: Debug
   - os: Visual Studio 2017
+    platform: Win32
     configuration: Release
-  - platform: Win32
-    configuration: Release
+  - os: Visual Studio 2017
+    platform: Win32
+    configuration: MinSizeRel
+  - os: Visual Studio 2017
+    platform: x64
+    configuration: Debug
 
 install:
   - set SRC_DIR=%CD%

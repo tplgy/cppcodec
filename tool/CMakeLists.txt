@@ -9,5 +9,3 @@ add_executable(base64dec base64dec.cpp)
 
 add_executable(hexenc hexenc.cpp)
 add_executable(hexdec hexdec.cpp)
-
-add_executable(helloworld helloworld.cpp)

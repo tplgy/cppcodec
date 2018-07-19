@@ -32,23 +32,21 @@ matrix:
       env: BUILD_TYPE=Release GXX=4.8
 
     # Newest/oldest clang
-    # At the time of writing, clang-6.0 doesn't yet apt-get install properly
-    # on Travis. Use 5.0 until the issue is fixed or a workaround is found.
     - os: linux
       compiler: clang
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0' ]
-          packages: [ 'clang-5.0', 'libstdc++-7-dev', 'libstdc++6' ] # C++17 support in libstd++
-      env: BUILD_TYPE=MinSizeRel CLANGXX=5.0 CXX_STD=17
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-6.0' ]
+          packages: [ 'clang-6.0', 'libstdc++-7-dev', 'libstdc++6' ] # C++17 support in libstd++
+      env: BUILD_TYPE=MinSizeRel CLANGXX=6.0 CXX_STD=17
 
     - os: linux
       compiler: clang
       addons:
         apt:
-          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0' ]
-          packages: [ 'clang-5.0', 'libstdc++-7-dev', 'libstdc++6' ] # C++17 support in libstd++
-      env: BUILD_TYPE=Release CLANGXX=5.0 CXX_STD=17
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-6.0' ]
+          packages: [ 'clang-6.0', 'libstdc++-7-dev', 'libstdc++6' ] # C++17 support in libstd++
+      env: BUILD_TYPE=Release CLANGXX=6.0 CXX_STD=17
 
     - os: linux
       compiler: clang
@@ -105,7 +103,7 @@ matrix:
         apt:
           sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0' ]
           packages: [ 'clang-5.0' ]
-      env: BUILD_TYPE=Debug CLANGXX=5.0
+      env: BUILD_TYPE=Release CLANGXX=5.0
 
     - os: linux
       compiler: clang
@@ -113,7 +111,7 @@ matrix:
         apt:
           sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-4.0' ]
           packages: [ 'clang-4.0' ]
-      env: BUILD_TYPE=Release CLANGXX=4.0
+      env: BUILD_TYPE=MinSizeRel CLANGXX=4.0
 
     - os: linux
       compiler: clang
