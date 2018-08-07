@@ -241,7 +241,7 @@ struct alphabet_index_info
     static constexpr const alphabet_index_t padding_idx = 1 << 8;
     static constexpr const alphabet_index_t invalid_idx = 1 << 9;
     static constexpr const alphabet_index_t eof_idx = 1 << 10;
-    static constexpr const alphabet_index_t stop_character_mask{~0xFFu};
+    static constexpr const alphabet_index_t stop_character_mask = static_cast<alphabet_index_t>(~0xFFu);
 
     static constexpr const bool padding_allowed = padding_searcher<
             CodecVariant, num_possible_symbols>::exists_padding_symbol();
