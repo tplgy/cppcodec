@@ -3,7 +3,7 @@ include_directories(BEFORE ${PROJECT_SOURCE_DIR})
 
 find_package(PkgConfig)
 if (PKG_CONFIG_FOUND)
-    pkg_check_modules(CATCH2 catch)
+    pkg_check_modules(CATCH2 catch2)
 endif()
 
 if (CATCH2_FOUND)
