@@ -187,8 +187,8 @@ template <typename T>
 static CPPCODEC_ALWAYS_INLINE constexpr size_t num_possible_values()
 {
     return static_cast<size_t>(
-            static_cast<intmax_t>(std::numeric_limits<T>::max())
-                    - static_cast<intmax_t>(std::numeric_limits<T>::min()) + 1);
+            static_cast<intmax_t>((std::numeric_limits<T>::max)())
+                    - static_cast<intmax_t>((std::numeric_limits<T>::min)()) + 1);
 }
 
 template <typename CodecVariant, alphabet_index_t InvalidIdx, size_t I>
