@@ -48,7 +48,7 @@ int main() {
 }
 ```
 
-(The prior example included "baseXX_default_*.h" includes, these are not recommended anymore and may eventually get deprecated.)
+(The prior example included "baseXX_default_*.h" includes, these are not recommended anymore and may eventually be deprecated.)
 
 Currently supported codec variants are:
 
