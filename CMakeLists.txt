@@ -3,7 +3,6 @@ project(cppcodec CXX)
 set(PROJECT_VERSION 0.1)
 
 include(GNUInstallDirs)
-include(CTest)
 
 # These flags are for binaries built by this particular CMake project (test_cppcodec, base64enc, etc.).
 # In your own project that uses cppcodec, you might want to specify a different standard or error level.
@@ -14,6 +13,10 @@ if (NOT CMAKE_CXX_STANDARD)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(BUILD_TESTS OFF)
+set(BUILD_EXAMPLES OFF)
+set(BUILD_TOOLS OFF)
 
 if (MSVC)
   # MSVC will respect CMAKE_CXX_STANDARD for CMake >= 3.10 and MSVC >= 19.0.24215
@@ -63,19 +66,34 @@ set(PUBLIC_HEADERS
 
 add_library(cppcodec OBJECT ${PUBLIC_HEADERS}) # unnecessary for building, but makes headers show up in IDEs
 set_target_properties(cppcodec PROPERTIES LINKER_LANGUAGE CXX)
-add_subdirectory(tool)
-add_subdirectory(example)
 
-if (BUILD_TESTING)
+target_include_directories(cppcodec PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
+
+if (BUILD_TESTS)
+    include(CTest)
     add_subdirectory(test)
+endif()
+
+if (BUILD_TOOLS)
+    add_subdirectory(tool)
+endif()
+
+if (BUILD_EXAMPLES)
+    add_subdirectory(example)
 endif()
 
 foreach(h ${PUBLIC_HEADERS})
     get_filename_component(FINAL_PATH ${h} PATH) # use DIRECTORY instead of PATH once requiring CMake 3.0
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${h} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${FINAL_PATH} COMPONENT "headers")
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${h} 
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${FINAL_PATH} 
+            COMPONENT "headers")
 endforeach()
 
 if (NOT WIN32)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cppcodec.pc.in ${CMAKE_CURRENT_BINARY_DIR}/cppcodec-1.pc @ONLY)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cppcodec-1.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cppcodec-1.pc 
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
 endif()
