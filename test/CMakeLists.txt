@@ -1,6 +1,3 @@
-# For cppcodec itself, don't prefer system headers over development ones.
-include_directories(BEFORE ${PROJECT_SOURCE_DIR})
-
 find_package(PkgConfig)
 if (PKG_CONFIG_FOUND)
     pkg_check_modules(CATCH2 catch2)
@@ -14,9 +11,14 @@ else()
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/catch/single_include)
 endif()
 
+add_compile_options(${CPPCODEC_PRIVATE_COMPILE_OPTIONS})
+
 add_executable(test_cppcodec test_cppcodec.cpp)
-add_test(cppcodec test_cppcodec)
+target_link_libraries(test_cppcodec cppcodec)
+add_test(NAME cppcodec COMMAND test_cppcodec)
 
 add_executable(benchmark_cppcodec benchmark_cppcodec.cpp)
+target_link_libraries(benchmark_cppcodec cppcodec)
 
 add_executable(minimal_decode minimal_decode.cpp)
+target_link_libraries(minimal_decode cppcodec)
