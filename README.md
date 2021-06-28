@@ -33,8 +33,8 @@ cppcodec's approach is to implement encoding/decoding algorithms in different cl
 Here is an expected standard use of cppcodec:
 
 ```C++
-#include <cppcodec/base32_crockford.hpp>
-#include <cppcodec/base64_rfc4648.hpp>
+#include "cppcodec/base32_crockford.hpp"
+#include "cppcodec/base64_rfc4648.hpp"
 #include <iostream>
 
 int main() {
