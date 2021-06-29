@@ -18,7 +18,7 @@ Cross-platform with measured decent performance and without compiler warnings.
 - ### [Philosophy and trade-offs](https://github.com/tplgy/cppcodec/blob/master/README.md#philosophy-and-trade-offs)
 - ### [API](https://github.com/tplgy/cppcodec/blob/master/README.md#api)
   - #### [Encoding](https://github.com/tplgy/cppcodec/blob/master/README.md#encoding)
-  - ### [Decoding](https://github.com/tplgy/cppcodec/blob/master/README.md#decoding)
+  - #### [Decoding](https://github.com/tplgy/cppcodec/blob/master/README.md#decoding)
 
 ****
 
