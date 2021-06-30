@@ -9,7 +9,18 @@ MIT licensed with consistent, flexible API. Supports raw pointers,
 `std::string` and (templated) character vectors without unnecessary allocations.
 Cross-platform with measured decent performance and without compiler warnings.
 
+## Contents
+- ### [Usage](https://github.com/tplgy/cppcodec/blob/master/README.md#usage)
+- ### [Variants](https://github.com/tplgy/cppcodec/blob/master/README.md#variants)
+  - #### [base64](https://github.com/tplgy/cppcodec/blob/master/README.md#base64)
+  - #### [base32](https://github.com/tplgy/cppcodec/blob/master/README.md#base32)
+  - #### [hex](https://github.com/tplgy/cppcodec/blob/master/README.md#hex)
+- ### [Philosophy and trade-offs](https://github.com/tplgy/cppcodec/blob/master/README.md#philosophy-and-trade-offs)
+- ### [API](https://github.com/tplgy/cppcodec/blob/master/README.md#api)
+  - #### [Encoding](https://github.com/tplgy/cppcodec/blob/master/README.md#encoding)
+  - #### [Decoding](https://github.com/tplgy/cppcodec/blob/master/README.md#decoding)
 
+****
 
 # Usage
 
