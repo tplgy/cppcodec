@@ -1,9 +1,9 @@
 find_package(PkgConfig)
-if (PKG_CONFIG_FOUND)
+if(PKG_CONFIG_FOUND)
     pkg_check_modules(CATCH2 catch2)
 endif()
 
-if (CATCH2_FOUND)
+if(CATCH2_FOUND)
     message(STATUS "Found system Catch2, not using bundled version")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CATCH2_CFLAGS}")
 else()
