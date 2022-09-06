@@ -1,6 +1,7 @@
-# For cppcodec itself, don't prefer system headers over development ones.
-include_directories(BEFORE ${PROJECT_SOURCE_DIR})
+add_compile_options(${CPPCODEC_PRIVATE_COMPILE_OPTIONS})
 
 add_executable(helloworld helloworld.cpp)
+target_link_libraries(helloworld cppcodec)
 
 add_executable(type_support_wrapper type_support_wrapper.cpp)
+target_link_libraries(type_support_wrapper cppcodec)
